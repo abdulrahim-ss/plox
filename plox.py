@@ -64,19 +64,19 @@ class Lox:
         self.hadError = True
 
 
-class PloxCmd(Cmd):
-    prompt = "§ "
-    commands = []
-    def __init__(self)  -> None:
-        intro = """\
-=================================================================
-         § PLOX - The Python 🐍 implementation of LOX §
-=================================================================\
-"""
-        print(intro)
+# class PloxCmd(Cmd):
+#     prompt = "§ "
+#     commands = []
+#     def __init__(self)  -> None:
+#         intro = """\
+# =================================================================
+#          § PLOX - The Python 🐍 implementation of LOX §
+# =================================================================\
+# """
+#         print(intro)
 
-    def default(self, line: str) -> None:
-        return super().default(line)
+#     def default(self, line: str) -> None:
+#         return super().default(line)
 
 
 if __name__ == "__main__":
