@@ -1,7 +1,7 @@
 from tokenType import TokenType
 
 
-class Token:
+class PloxToken:
     def __init__(self, type:TokenType, lexeme:str, literal:object, line:int) -> None:
         self.type = type
         self.lexeme = lexeme

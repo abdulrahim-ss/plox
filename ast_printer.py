@@ -1,9 +1,11 @@
+# Example Visitors
 from Expr import *
-from token import Token
+from Expr import Conditional
+from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 
 class AstPrinter(ExprVisitor):
-    def print(self, expr: Expr) -> str:
+    def stringify(self, expr: Expr) -> str:
         return expr.accept(self)
 
     def visitBinary(self, expr: Binary) -> str:
@@ -18,17 +20,24 @@ class AstPrinter(ExprVisitor):
     
     def visitUnary(self, expr: Unary) -> str:
         return self.paranthesize(expr.operator.lexeme, expr.right)
+    
+    def visitConditional(self, expr: Conditional):
+        pass
 
     def paranthesize(self, name: str, *exprs: Expr) -> str:
         output = "(" + name
         for expr in exprs:
-            output += " " + expr.accept(self)
+            try:
+                x = expr.accept(self)
+            except:
+                x = "[INVALID]"
+            output += " " + x
         output += ")"
         return output
 
 
 class RPNPrinter(ExprVisitor):
-    def print(self, expr: Expr) -> str:
+    def stringify(self, expr: Expr) -> str:
         return expr.accept(self)
 
     def visitBinary(self, expr: Binary) -> str:
@@ -51,19 +60,19 @@ class RPNPrinter(ExprVisitor):
 if __name__ == "__main__":
     expression = Binary(
         Unary(
-            Token(TT.MINUS, "-", None, 1),
+            PloxToken(TT.MINUS, "-", None, 1),
             Literal(123)
         ),
-        Token(TT.STAR, "*", None, 1),
+        PloxToken(TT.STAR, "*", None, 1),
         Grouping(Literal(45.67))
     )
 
     expression2 = Binary(
         Unary(
-            Token(TokenType.MINUS, "-", None, 1),
+            PloxToken(TokenType.MINUS, "-", None, 1),
             Literal(123)
         ),
-        Token(TokenType.STAR, "*", None, 1),
+        PloxToken(TokenType.STAR, "*", None, 1),
         Grouping(
             Literal("str")
         )
@@ -71,5 +80,5 @@ if __name__ == "__main__":
 
     ast_printer = AstPrinter()
     rpn_printer = RPNPrinter()
-    print(ast_printer.print(expression))
-    print(rpn_printer.print(expression))
+    print(ast_printer.stringify(expression))
+    print(rpn_printer.stringify(expression))

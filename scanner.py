@@ -1,6 +1,7 @@
 from typing import List, Callable
 
-from token import Token
+from error_callback import ErrorCallback
+from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 
 
@@ -24,22 +25,22 @@ class Scanner:
         'while':  TT.WHILE,
     }
 
-    def __init__(self, source: str, error:Callable[[int, str], None]) -> None:
+    def __init__(self, source: str, error:ErrorCallback) -> None:
         self.start:int = 0
         self.current:int = 0
         self.line:int = 1
 
         self.source = source
-        self.tokens: List[Token] = []
+        self.tokens: List[PloxToken] = []
 
         self.error = error
 
-    def scanTokens(self) -> List[Token]:
+    def scanTokens(self) -> List[PloxToken]:
         while not self.isAtEnd():
             self.start = self.current
             self.scanToken()
 
-        self.tokens.append(Token(TT.EOF, "", None, self.line))
+        self.tokens.append(PloxToken(TT.EOF, "", None, self.line))
         return self.tokens
     
     def isAtEnd(self) -> bool:
@@ -60,6 +61,8 @@ class Scanner:
             case "+": self.addToken(TT.PLUS)
             case ";": self.addToken(TT.SEMICOLON)
             case "*": self.addToken(TT.STAR)
+            case "?": self.addToken(TT.QUESTION)
+            case ":": self.addToken(TT.COLON)
             #SPECIAL SINGLE-CHARACTER OPERATOR TOKENS
             case "!":
                 t = TT.BANG_EQUAL if self.match('=') else TT.BANG
@@ -108,7 +111,7 @@ class Scanner:
                 elif self.is_alpha(c):
                     self.identifier()
                 else:
-                    self.error(self.line, f"Unexpected Character \"{c}\"")
+                    self.error(self.line, "", f"Unexpected Character \"{c}\"")
 
     def advance(self) -> str:
         self.current += 1
@@ -136,7 +139,7 @@ class Scanner:
             self.advance()
             self.addToken(TT.STRING, value)
             return
-        self.error(self.line, "Unterminated string")
+        self.error(self.line, "", "Unterminated string")
 
     def number(self) -> None:
         number = self.source[self.start]
@@ -146,7 +149,7 @@ class Scanner:
             if self.is_digit(self.peek()):
                 while self.is_digit(self.peek()): number += self.advance()
             else:
-                self.error(self.line, "Number value format is incorrect.")
+                self.error(self.line, "", "Number value format is incorrect.")
                 return
         number = float(number)
         self.addToken(TT.NUMBER, number)
@@ -167,8 +170,8 @@ class Scanner:
 
     @staticmethod
     def is_digit(c: str) -> bool:
-        return '0' < c < '9'
+        return '0' <= c <= '9'
 
     def addToken(self, type: TokenType, literal: object = None) -> None:
         text = self.source[self.start:self.current]
-        self.tokens.append(Token(type, text, literal, self.line))
+        self.tokens.append(PloxToken(type, text, literal, self.line))

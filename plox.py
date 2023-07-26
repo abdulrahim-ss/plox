@@ -1,13 +1,19 @@
 #!/bin/python3
-import argparse, os
-from typing import List
-from cmd import Cmd
+import argparse
+from typing import List, Optional, Type, Union
+# from cmd import Cmd
+
+from plox_token import PloxToken
+from Expr import Expr
 
 from scanner import Scanner
-from token import Token
+from plox_parser import PloxParser
+
+#temp import
+from ast_printer import AstPrinter
 
 
-class Lox:
+class PLox:
     def __init__(self, args: List[str]):
         self.args = args
         self.hadError = False
@@ -51,13 +57,17 @@ class Lox:
 
     def run(self, source: str) -> None:
         scanner = Scanner(source, self.error)
-        tokens: List[Token] = scanner.scanTokens()
- 
-        for token in tokens:
-            print(token)
+        tokens: List[PloxToken] = scanner.scanTokens()
 
-    def error(self, line: int, message: str) -> None:
-        self.report(line, "", message)
+        parser = PloxParser(tokens, self.error)
+        expressions: Expr|None = parser.parse()
+
+        if self.hadError: return
+        print(AstPrinter().stringify(expressions))
+
+    def error(self, line: int, where: str, message: str, error: Optional[Type[Exception]]=None) -> Union[Type[Exception], None]:
+        self.report(line, where, message)
+        return error
 
     def report(self, line: int, where: str, message: str) -> None:
         print(f"line {line} - Error {where}: {message}")
@@ -83,4 +93,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plox. The Python implementation of the LOX language.")
     parser.add_argument("arguments", type=str, nargs='*')
     args = vars(parser.parse_args())['arguments']
-    w = Lox(args)
+    w = PLox(args)

@@ -5,6 +5,7 @@ class TokenType(Enum):
     #Single-character tokens.
     (LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+    QUESTION, COLON,
 
     # One or two character tokens.
     BANG, BANG_EQUAL,
@@ -19,4 +20,4 @@ class TokenType(Enum):
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
     
-    EOF) = range(39)
+    EOF) = range(41)

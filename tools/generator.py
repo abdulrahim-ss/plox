@@ -3,7 +3,7 @@ import argparse
 def define_ast(output_dir:str, name:str, types:dict) -> None:
     path = output_dir + "/" + name + ".py"
     with open(path, "w") as f:
-        f.write("from token import Token\n\n")
+        f.write("from plox_token import PloxToken\n\n")
         f.write(f"class {name}:\n")
         f.write("\tdef accept(self, visitor):\n")
         f.write("\t\tpass\n\n\n")
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     expr = {
         "Binary": [
             {"type": "Expr", "name": "left"},
-            {"type": "Token", "name": "operator"},
+            {"type": "PloxToken", "name": "operator"},
             {"type": "Expr", "name": "right"},
         ],
         "Grouping": [
@@ -58,8 +58,13 @@ if __name__ == "__main__":
             {"type": "object", "name": "value"},
         ],
         "Unary": [
-            {"type": "Token", "name": "operator"},
+            {"type": "PloxToken", "name": "operator"},
             {"type": "Expr", "name": "right"},
+        ],
+        "Conditional": [
+            {"type": "Expr", "name": "condition"},
+            {"type": "Expr", "name": "then_clause"},
+            {"type": "Expr", "name": "else_clause"},
         ],
     }
     define_ast(output, "Expr", expr)

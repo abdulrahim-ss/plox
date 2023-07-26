@@ -1,4 +1,4 @@
-from token import Token
+from plox_token import PloxToken
 
 class Expr:
 	def accept(self, visitor):
@@ -6,7 +6,7 @@ class Expr:
 
 
 class Binary(Expr):
-	def __init__(self, left: Expr, operator: Token, right: Expr):
+	def __init__(self, left: Expr, operator: PloxToken, right: Expr):
 		self.left = left
 		self.operator = operator
 		self.right = right
@@ -32,12 +32,22 @@ class Literal(Expr):
 
 
 class Unary(Expr):
-	def __init__(self, operator: Token, right: Expr):
+	def __init__(self, operator: PloxToken, right: Expr):
 		self.operator = operator
 		self.right = right
 
 	def accept(self, visitor):
 		return visitor.visitUnary(self)
+
+
+class Conditional(Expr):
+	def __init__(self, condition: Expr, then_clause: Expr, else_clause: Expr):
+		self.condition = condition
+		self.then_clause = then_clause
+		self.else_clause = else_clause
+
+	def accept(self, visitor):
+		return visitor.visitConditional(self)
 
 
 class ExprVisitor:
@@ -51,5 +61,8 @@ class ExprVisitor:
 		raise NotImplementedError
 
 	def visitUnary(self, expr:Unary):
+		raise NotImplementedError
+
+	def visitConditional(self, expr:Conditional):
 		raise NotImplementedError
 
