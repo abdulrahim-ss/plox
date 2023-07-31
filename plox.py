@@ -6,6 +6,7 @@ from cmd import Cmd
 from plox_token import PloxToken
 from tokenType import TokenType as TT
 from Expr import Expr
+from Stmt import Stmt
 
 from scanner import Scanner
 from plox_parser import PloxParser
@@ -18,7 +19,6 @@ from interpreter import Interpreter
 class PLox:
     def __init__(self, args: List[str]):
         self.args = args
-        self.interpreter = Interpreter(self.runtime_error)
 
         self.hadError = False
         self.hadRunTimeError = False
@@ -28,9 +28,11 @@ class PLox:
             exit(64)
 
         elif len(self.args) == 1:
+            self.interpreter = Interpreter(self.runtime_error)
             self.runFile(self.args[0])
             
         else:
+            self.interpreter = Interpreter(self.runtime_error, repl=True)
             self.runPrompt()
 
     def runFile(self, path) -> None:
@@ -44,16 +46,34 @@ class PLox:
     def runPrompt(self) -> None:
         prompt = PloxCmd(self)
         prompt.cmdloop()
+    #     intro = """\
+    # =================================================================
+    #         § PLOX - The Python 🐍 implementation of LOX §
+    # =================================================================\
+    # """
+    #     print(intro)
+    #     while True:
+    #         try:
+    #             #line = input(f"[{os.getcwd()}] § ")
+    #             line = input("§ ")
+    #         except EOFError:
+    #             print("\nBye 👋")
+    #             break
+    #         if line == "exit":
+    #             print("Bye 👋")
+    #             break
+    #         self.run(line)
+    #         self.hadError = False
 
     def run(self, source: str) -> None:
         scanner = Scanner(source, self.scanning_error)
         tokens: List[PloxToken] = scanner.scanTokens()
 
         parser = PloxParser(tokens, self.parsing_error)
-        expression: Expr|None = parser.parse()
+        statements: List[Stmt] = parser.parse()
 
         if self.hadError: return
-        self.interpreter.interpret(expression)
+        self.interpreter.interpret(statements)
         # print(AstPrinter().stringify(expression))
 
     ############### ERROR handling #########################

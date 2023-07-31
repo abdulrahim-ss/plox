@@ -3,8 +3,10 @@ import argparse
 def define_ast(output_dir:str, name:str, types:dict) -> None:
     path = output_dir + "/" + name + ".py"
     with open(path, "w") as f:
-        f.write("from plox_token import PloxToken\n\n")
-        f.write(f"class {name}:\n")
+        f.write("from plox_token import PloxToken\n")
+        if name != "Expr":
+            f.write("from Expr import Expr\n\n")
+        f.write(f"\nclass {name}:\n")
         f.write("\tdef accept(self, visitor):\n")
         f.write("\t\tpass\n\n\n")
 
@@ -46,6 +48,10 @@ if __name__ == "__main__":
     output = args.output
 
     expr = {
+        "Assign": [
+            {"type": "PloxToken", "name": "name"},
+            {"type": "Expr", "name": "value"},
+        ],
         "Binary": [
             {"type": "Expr", "name": "left"},
             {"type": "PloxToken", "name": "operator"},
@@ -66,5 +72,21 @@ if __name__ == "__main__":
             {"type": "Expr", "name": "then_clause"},
             {"type": "Expr", "name": "else_clause"},
         ],
+        "Variable": [
+            {"type": "PloxToken", "name": "name"},
+        ],
+    }
+    stmt = {
+        "Expression": [
+            {"type": "Expr", "name": "expression"},
+        ],
+        "Print": [
+            {"type": "Expr", "name": "expression"},
+        ],
+        "Var": [
+            {"type": "PloxToken", "name": "name"},
+            {"type": "Expr", "name": "Initializer"},
+        ],
     }
     define_ast(output, "Expr", expr)
+    define_ast(output, "Stmt", stmt)

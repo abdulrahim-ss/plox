@@ -5,6 +5,15 @@ class Expr:
 		pass
 
 
+class Assign(Expr):
+	def __init__(self, name: PloxToken, value: Expr):
+		self.name = name
+		self.value = value
+
+	def accept(self, visitor):
+		return visitor.visitAssign(self)
+
+
 class Binary(Expr):
 	def __init__(self, left: Expr, operator: PloxToken, right: Expr):
 		self.left = left
@@ -50,7 +59,18 @@ class Conditional(Expr):
 		return visitor.visitConditional(self)
 
 
+class Variable(Expr):
+	def __init__(self, name: PloxToken):
+		self.name = name
+
+	def accept(self, visitor):
+		return visitor.visitVariable(self)
+
+
 class ExprVisitor:
+	def visitAssign(self, expr:Assign):
+		raise NotImplementedError
+
 	def visitBinary(self, expr:Binary):
 		raise NotImplementedError
 
@@ -64,5 +84,8 @@ class ExprVisitor:
 		raise NotImplementedError
 
 	def visitConditional(self, expr:Conditional):
+		raise NotImplementedError
+
+	def visitVariable(self, expr:Variable):
 		raise NotImplementedError
 

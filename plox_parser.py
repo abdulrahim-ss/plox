@@ -3,6 +3,7 @@ from typing import List, Optional, Callable
 from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 from Expr import *
+from Stmt import *
 
 class ParserError(Exception):
     pass
@@ -13,25 +14,69 @@ class PloxParser:
         self.current = 0
         self.error = error
 
-    def parse(self) -> Optional[Expr]:
+    def parse(self) -> List[Stmt]:
+        statements : List[Stmt, None] = []
+        while not self._isAtEnd():
+            statements.append(self.declaration())
+        return statements
+        
+    def declaration(self) -> Optional[Stmt]:
         try:
-            return self.expression()
-        except:
+            if self._match(TT.VAR):
+                return self.varDeclaration()
+            return self.statement()
+        except ParserError:
+            self._sync()
             return None
+
+    def varDeclaration(self) -> Stmt:
+        name : PloxToken = self._consume(TT.IDENTIFIER, "Expected a variable name")
+        initializer : Expr = None
+        if self._match(TT.EQUAL):
+            initializer = self.expression()
+        self._consume(TT.SEMICOLON, "Expected \";\" after variable declaration")
+        return Var(name, initializer)
+
+    def statement(self) -> Stmt:
+        if self._match(TT.PRINT): return self.printStatement()
+        return self.expressionStatement()
+    
+    def printStatement(self) -> Stmt:
+        value = self.expression()
+        self._consume(TT.SEMICOLON, "Expected \";\" after value")
+        return Print(value)
+
+    def expressionStatement(self) -> Stmt:
+        value = self.expression()
+        self._consume(TT.SEMICOLON, "Expected \";\" after expression")
+        return Expression(value)
 
     def expression(self) -> Expr:
         return self.comma()
 
     def comma(self) -> Expr:
-        expr : Expr = self.conditional()
+        expr : Expr = self.assignment()
 
         while self._match(TT.COMMA):
             operator : PloxToken = self._previous()
-            right : Expr = self.conditional()
+            right : Expr = self.assignment()
             expr = Binary(expr, operator, right)
 
         return expr
-    
+
+    def assignment(self) -> Expr:
+        expr : Expr = self.conditional()
+
+        if self._match(TT.EQUAL):
+            equals = self._previous()
+            value = self.assignment()
+            if isinstance(expr, Variable):
+                name = expr.name
+                return Assign(name, value)
+            self._error(equals, "Invalid assignment target")
+
+        return expr
+
     def conditional(self) -> Expr:
         expr : Expr = self.equality()
 
@@ -103,6 +148,8 @@ class PloxParser:
             self._consume(TT.RIGHT_PAREN, "Expected ')' after expression")
             return Grouping(expr)
         
+        if self._match(TT.IDENTIFIER): return Variable(self._previous())
+        
         # Error production
         if self._match(
             TT.BANG_EQUAL, TT.EQUAL_EQUAL,
@@ -143,7 +190,6 @@ class PloxParser:
     def _previous(self) -> PloxToken:
         return self.tokens[self.current - 1]
 
-
 ####################################################
 
     def _consume(self, type: TokenType, message: str) -> PloxToken:
@@ -157,7 +203,6 @@ class PloxParser:
         
     def _sync(self) -> None:
         self._advance()
-
         while not self._isAtEnd():
             if self._previous().type == TT.SEMICOLON or \
             self._peek().type in (
@@ -179,16 +224,18 @@ class PloxParser:
 
 if __name__ == "__main__":
     tokens = [
-        PloxToken(TT.LEFT_PAREN, "(", None, 1),
+        PloxToken(TT.PRINT, "print", None, 1),
         PloxToken(TT.STRING, "test", "test", 1),
-        PloxToken(TT.RIGHT_PAREN, ")", None, 1),
+        PloxToken(TT.SEMICOLON, ";", None, 1),
         PloxToken(TT.EOF, "", None, 1),
     ]
     from plox import PLox
     l = PLox([""])
-    error = l.error
+    error = l.parsing_error
     p = PloxParser(tokens, error)
     try:
-        p.primary()
+        x = p.parse()
+        for _ in x:
+            print(_)
     except Exception as e:
         print(e)

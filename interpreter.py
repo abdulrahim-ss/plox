@@ -1,10 +1,12 @@
-from typing import Any, Callable, Type
+from typing import List, Any, Callable, Type
 
 from Expr import *
-from Expr import Binary, Conditional
+from Expr import Assign
+from Stmt import *
+from Stmt import Expression, Var
 from plox_token import PloxToken
 from tokenType import TokenType as TT
-
+from environment import Environment
 
 class RunTimeError(RuntimeError):
     def __init__(self, token: PloxToken, msg: str):
@@ -12,19 +14,45 @@ class RunTimeError(RuntimeError):
         self.token = token
 
 
-class Interpreter(ExprVisitor):
-    def __init__(self, error: Callable[[Type[Exception]], None]):
+class Interpreter(ExprVisitor, StmtVisitor):
+    #TODO: get the comma operator to work
+    def __init__(self, error: Callable[[Type[Exception]], None], repl: bool = False):
         self.error = error
+        self.repl = repl
+        self.env = Environment(RunTimeError)
 
-    def interpret(self, expr: object) -> None:
+    def interpret(self, statements: List[Stmt]) -> None:
         try:
-            value = self._eval(expr)
-            print(self._stringify(value))
+            for statement in statements:
+                self._exec(statement)
         except RunTimeError as err:
             self.error(err)
 
+    def visitExpression(self, stmt: Expression) -> None:
+        value = self._eval(stmt.expression)
+        if self.repl:
+            print(self._stringify(value))
+
+    def visitPrint(self, stmt: Print) -> None:
+        value = self._eval(stmt.expression)
+        print(self._stringify(value))
+
+    def visitVar(self, stmt: Var) -> None:
+        value = None
+        if stmt.Initializer is not None:
+            value = self._eval(stmt.Initializer)
+        self.env.assign(stmt.name.lexeme, value)
+
+    def visitAssign(self, expr: Assign) -> object:
+        value = self._eval(expr.value)
+        self.env.assign_existing(expr.name.lexeme, value)
+        return value
+
     def visitLiteral(self, expr: Literal) -> object:
         return expr.value
+
+    def visitVariable(self, expr: Variable) -> object:
+        return self.env.fetch(expr.name)
 
     def visitGrouping(self, expr: Grouping) -> object:
         return self._eval(expr.expression)
@@ -130,6 +158,9 @@ class Interpreter(ExprVisitor):
             if isinstance(operand, float): continue
             else:
                 raise RunTimeError(operator, "Operands must be numbers")
+
+    def _exec(self, stmt: Stmt) -> None:
+        stmt.accept(self)
 
     def _eval(self, expr: Expr) -> Any:
         return expr.accept(self)
