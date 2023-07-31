@@ -1,22 +1,27 @@
 #!/bin/python3
 import argparse
-from typing import List, Optional, Type, Union
-# from cmd import Cmd
+from typing import List, Type
+from cmd import Cmd
 
 from plox_token import PloxToken
+from tokenType import TokenType as TT
 from Expr import Expr
 
 from scanner import Scanner
 from plox_parser import PloxParser
+from interpreter import Interpreter
 
 #temp import
-from ast_printer import AstPrinter
+# from ast_printer import AstPrinter
 
 
 class PLox:
     def __init__(self, args: List[str]):
         self.args = args
+        self.interpreter = Interpreter(self.runtime_error)
+
         self.hadError = False
+        self.hadRunTimeError = False
 
         if len(self.args) > 1:
             print("Usage: plox <script>")
@@ -34,59 +39,66 @@ class PLox:
             f.close()
         self.run(lines)
         if self.hadError: exit(65)
+        if self.hadRunTimeError: exit(70)
 
     def runPrompt(self) -> None:
-        intro = """\
-=================================================================
-         § PLOX - The Python 🐍 implementation of LOX §
-=================================================================\
-"""
-        print(intro)
-        while True:
-            try:
-                #line = input(f"[{os.getcwd()}] § ")
-                line = input("§ ")
-            except EOFError:
-                print("\nBye 👋")
-                break
-            if line == "exit":
-                print("Bye 👋")
-                break
-            self.run(line)
-            self.hadError = False
+        prompt = PloxCmd(self)
+        prompt.cmdloop()
 
     def run(self, source: str) -> None:
-        scanner = Scanner(source, self.error)
+        scanner = Scanner(source, self.scanning_error)
         tokens: List[PloxToken] = scanner.scanTokens()
 
-        parser = PloxParser(tokens, self.error)
-        expressions: Expr|None = parser.parse()
+        parser = PloxParser(tokens, self.parsing_error)
+        expression: Expr|None = parser.parse()
 
         if self.hadError: return
-        print(AstPrinter().stringify(expressions))
+        self.interpreter.interpret(expression)
+        # print(AstPrinter().stringify(expression))
 
-    def error(self, line: int, where: str, message: str, error: Optional[Type[Exception]]=None) -> Union[Type[Exception], None]:
-        self.report(line, where, message)
-        return error
+    ############### ERROR handling #########################
+    def runtime_error(self, err: Type[Exception]) -> None:
+        print(f"RUNTIME ERROR [at line {err.token.line}]:")
+        print("\t", err)
+        self.hadRunTimeError = True
+
+    def scanning_error(self, line: int, message: str) -> None:
+        self.report(line, "", message)
+
+    def parsing_error(self, token: PloxToken, message: str) -> None:
+        where = "at the end" if token.type == TT.EOF else f"at \"{token.lexeme}\""
+        self.report(token.line, where, message)
 
     def report(self, line: int, where: str, message: str) -> None:
         print(f"line {line} - Error {where}: {message}")
         self.hadError = True
 
 
-# class PloxCmd(Cmd):
-#     prompt = "§ "
-#     commands = []
-#     def __init__(self)  -> None:
-#         intro = """\
-# =================================================================
-#          § PLOX - The Python 🐍 implementation of LOX §
-# =================================================================\
-# """
-#         print(intro)
+class PloxCmd(Cmd):
+    prompt = "§ "
+    def __init__(self, plox) -> None:
+        intro = """\
+=================================================================
+         § PLOX - The Python 🐍 implementation of LOX §
+=================================================================\
+"""
+        self.plox = plox
+        print(intro)
+        super().__init__()
 
-#     def default(self, line: str) -> None:
-#         return super().default(line)
+    def do_exit(self, arg) -> None:
+        """EXIT"""
+        print("Bye 👋")
+        exit(0)
+
+    def do_EOF(self, arg) -> None:
+        """EXIT"""
+        print("\nBye 👋")
+        exit(0)
+
+    def default(self, line: str) -> None:
+        self.plox.run(line)
+        self.plox.hadError = False
 
 
 if __name__ == "__main__":

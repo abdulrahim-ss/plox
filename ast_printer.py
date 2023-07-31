@@ -1,6 +1,5 @@
 # Example Visitors
 from Expr import *
-from Expr import Conditional
 from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 

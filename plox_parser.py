@@ -1,6 +1,5 @@
-from typing import List, Optional, Type
+from typing import List, Optional, Callable
 
-from error_callback import ErrorCallback
 from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 from Expr import *
@@ -9,7 +8,7 @@ class ParserError(Exception):
     pass
 
 class PloxParser:
-    def __init__(self, tokens: List[PloxToken], error:ErrorCallback) -> None:
+    def __init__(self, tokens: List[PloxToken], error:Callable[[PloxToken, str], None]) -> None:
         self.tokens = tokens
         self.current = 0
         self.error = error
@@ -152,13 +151,9 @@ class PloxParser:
             return self._advance()
         raise self._error(self._peek(), message)
 
-    def _error(self, token: PloxToken, message: str) -> Type[Exception]:
-        where = "at the end" if token.type == TT.EOF else f"at \"{token.lexeme}\""
-        error = self.error(token.line, where, message, ParserError)
-        if error:
-            return error
-        else:
-            return ParserError
+    def _error(self, token: PloxToken, message: str) -> ParserError:
+        self.error(token, message)
+        return ParserError
         
     def _sync(self) -> None:
         self._advance()

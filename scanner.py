@@ -1,6 +1,6 @@
 from typing import List, Callable
 
-from error_callback import ErrorCallback
+from typing import Callable
 from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 
@@ -25,7 +25,7 @@ class Scanner:
         'while':  TT.WHILE,
     }
 
-    def __init__(self, source: str, error:ErrorCallback) -> None:
+    def __init__(self, source: str, error:Callable[[int, str], None]) -> None:
         self.start:int = 0
         self.current:int = 0
         self.line:int = 1
@@ -111,7 +111,7 @@ class Scanner:
                 elif self.is_alpha(c):
                     self.identifier()
                 else:
-                    self.error(self.line, "", f"Unexpected Character \"{c}\"")
+                    self.error(self.line, f"Unexpected Character \"{c}\"")
 
     def advance(self) -> str:
         self.current += 1
@@ -139,7 +139,7 @@ class Scanner:
             self.advance()
             self.addToken(TT.STRING, value)
             return
-        self.error(self.line, "", "Unterminated string")
+        self.error(self.line, "Unterminated string")
 
     def number(self) -> None:
         number = self.source[self.start]
@@ -149,7 +149,7 @@ class Scanner:
             if self.is_digit(self.peek()):
                 while self.is_digit(self.peek()): number += self.advance()
             else:
-                self.error(self.line, "", "Number value format is incorrect.")
+                self.error(self.line, "Number value format is incorrect.")
                 return
         number = float(number)
         self.addToken(TT.NUMBER, number)
