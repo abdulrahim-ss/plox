@@ -85,7 +85,7 @@ class PLox:
         self.report(line, "", message)
 
     def parsing_error(self, token: PloxToken, message: str) -> None:
-        where = "at the end" if token.type == TT.EOF else f"at \"{token.lexeme}\""
+        where = "at the end" if token.type == TT.EOF else f"at {{{token.lexeme}}}"
         self.report(token.line, where, message)
 
     def report(self, line: int, where: str, message: str) -> None:

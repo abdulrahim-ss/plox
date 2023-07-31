@@ -44,18 +44,22 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value = None
         if stmt.Initializer is not None:
             value = self._eval(stmt.Initializer)
-        self.env.assign(stmt.name.lexeme, value)
+        self.env.assign(stmt.name, value)
 
     def visitAssign(self, expr: Assign) -> object:
         value = self._eval(expr.value)
-        self.env.assign_existing(expr.name.lexeme, value)
+        self.env.assign_existing(expr.name, value)
         return value
 
     def visitLiteral(self, expr: Literal) -> object:
         return expr.value
 
     def visitVariable(self, expr: Variable) -> object:
-        return self.env.fetch(expr.name)
+        value = self.env.fetch(expr.name)
+        return value
+        # if value:
+        #     return value
+        # raise RunTimeError(expr.name, f"Variable {{{expr.name.lexeme}}} must be initialized in order to be accessed")
 
     def visitGrouping(self, expr: Grouping) -> object:
         return self._eval(expr.expression)
@@ -124,7 +128,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def _numify(value: object) -> float:
         if value is False: return 0
         if value is True: return 1
-        if value is None: return -1
+        # if value is None: return -1
         if isinstance(value, str): return int.from_bytes(value.encode(), "big", signed=False)
         return float(value)
 

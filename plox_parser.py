@@ -34,7 +34,7 @@ class PloxParser:
         initializer : Expr = None
         if self._match(TT.EQUAL):
             initializer = self.expression()
-        self._consume(TT.SEMICOLON, "Expected \";\" after variable declaration")
+        self._consume(TT.SEMICOLON, "Expected {;} after variable declaration")
         return Var(name, initializer)
 
     def statement(self) -> Stmt:
@@ -44,12 +44,12 @@ class PloxParser:
     
     def printStatement(self) -> Stmt:
         value = self.expression()
-        self._consume(TT.SEMICOLON, "Expected \";\" after value")
+        self._consume(TT.SEMICOLON, "Expected {;} after value")
         return Print(value)
 
     def expressionStatement(self) -> Stmt:
         value = self.expression()
-        self._consume(TT.SEMICOLON, "Expected \";\" after expression")
+        self._consume(TT.SEMICOLON, "Expected {;} after expression")
         return Expression(value)
 
     def block(self) -> List[Stmt]:
@@ -57,7 +57,7 @@ class PloxParser:
 
         while not self._check(TT.RIGHT_BRACE) and not self._isAtEnd():
             statements.append(self.declaration())
-        self._consume(TT.RIGHT_BRACE, "Expected \"}\" after block")
+        self._consume(TT.RIGHT_BRACE, "Expected { \"}\" } after block")
 
         return statements
 
@@ -92,7 +92,7 @@ class PloxParser:
 
         if self._match(TT.QUESTION):
             then_clause : Expr = self.expression()
-            self._consume(TT.COLON, "Expected \":\" after THEN expression")
+            self._consume(TT.COLON, "Expected {:} after THEN expression")
             else_clause : Expr = self.conditional()
             expr = Conditional(expr, then_clause, else_clause)
         

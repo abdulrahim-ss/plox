@@ -111,7 +111,7 @@ class Scanner:
                 elif self.is_alpha(c):
                     self.identifier()
                 else:
-                    self.error(self.line, f"Unexpected Character \"{c}\"")
+                    self.error(self.line, f"Unexpected Character {{{c}}}")
 
     def advance(self) -> str:
         self.current += 1

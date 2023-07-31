@@ -8,24 +8,24 @@ class Environment:
         self.values = dict()
         self.enclosing = enclosing
 
-    def assign(self, name: str, value: object) -> None:
-        self.values[name] = value
+    def assign(self, name: PloxToken, value: object) -> None:
+        self.values[name.lexeme] = value
 
-    def assign_existing(self, name: str, value: object) -> None:
+    def assign_existing(self, token: PloxToken, value: object) -> None:
+        name = token.lexeme
         if self.values.get(name):
             self.values[name] = value
             return
         if self.enclosing is not None:
             self.enclosing.assign(name, value)
             return
-        raise self.raisable(name, f"Undefined variable \"{name}\".")
+        raise self.raisable(token, f"Undefined variable {{{name}}}")
 
     def fetch(self, token: PloxToken) -> object:
         name = token.lexeme
-        value = self.values.get(name)
-        if value:
-            return value
+        if name in self.values.keys():
+            return self.values.get(name)
         if self.enclosing is not None:
             return self.enclosing.fetch(token)
 
-        raise self.raisable(name, f"Undefined variable \"{name}\".")
+        raise self.raisable(token, f"Undefined variable {{{name}}}")
