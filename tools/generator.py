@@ -3,6 +3,8 @@ import argparse
 def define_ast(output_dir:str, name:str, types:dict) -> None:
     path = output_dir + "/" + name + ".py"
     with open(path, "w") as f:
+        if name != "Expr":
+            f.write("from typing import List\n\n")
         f.write("from plox_token import PloxToken\n")
         if name != "Expr":
             f.write("from Expr import Expr\n\n")
@@ -82,6 +84,9 @@ if __name__ == "__main__":
         ],
         "Print": [
             {"type": "Expr", "name": "expression"},
+        ],
+        "Block": [
+            {"type": "List[Stmt]", "name": "statements"},
         ],
         "Var": [
             {"type": "PloxToken", "name": "name"},

@@ -5,7 +5,6 @@ from cmd import Cmd
 
 from plox_token import PloxToken
 from tokenType import TokenType as TT
-from Expr import Expr
 from Stmt import Stmt
 
 from scanner import Scanner

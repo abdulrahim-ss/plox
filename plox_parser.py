@@ -39,6 +39,7 @@ class PloxParser:
 
     def statement(self) -> Stmt:
         if self._match(TT.PRINT): return self.printStatement()
+        if self._match(TT.LEFT_BRACE): return Block(self.block())
         return self.expressionStatement()
     
     def printStatement(self) -> Stmt:
@@ -50,6 +51,15 @@ class PloxParser:
         value = self.expression()
         self._consume(TT.SEMICOLON, "Expected \";\" after expression")
         return Expression(value)
+
+    def block(self) -> List[Stmt]:
+        statements : List[Stmt] = []
+
+        while not self._check(TT.RIGHT_BRACE) and not self._isAtEnd():
+            statements.append(self.declaration())
+        self._consume(TT.RIGHT_BRACE, "Expected \"}\" after block")
+
+        return statements
 
     def expression(self) -> Expr:
         return self.comma()

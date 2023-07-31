@@ -28,6 +28,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         except RunTimeError as err:
             self.error(err)
 
+    def visitBlock(self, stmt: Block) -> None:
+        self._exec_block(stmt.statements, Environment(RunTimeError, self.env))
+
     def visitExpression(self, stmt: Expression) -> None:
         value = self._eval(stmt.expression)
         if self.repl:
@@ -161,6 +164,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def _exec(self, stmt: Stmt) -> None:
         stmt.accept(self)
+
+    def _exec_block(self, statements: List[Stmt], env: Environment) -> None:
+        previous = self.env
+        try:
+            self.env = env
+            for statement in statements:
+                self._exec(statement)
+        finally:
+            self.env = previous
 
     def _eval(self, expr: Expr) -> Any:
         return expr.accept(self)

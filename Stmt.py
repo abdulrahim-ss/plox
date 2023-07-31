@@ -1,3 +1,5 @@
+from typing import List
+
 from plox_token import PloxToken
 from Expr import Expr
 
@@ -23,6 +25,14 @@ class Print(Stmt):
 		return visitor.visitPrint(self)
 
 
+class Block(Stmt):
+	def __init__(self, statements: List[Stmt]):
+		self.statements = statements
+
+	def accept(self, visitor):
+		return visitor.visitBlock(self)
+
+
 class Var(Stmt):
 	def __init__(self, name: PloxToken, Initializer: Expr):
 		self.name = name
@@ -37,6 +47,9 @@ class StmtVisitor:
 		raise NotImplementedError
 
 	def visitPrint(self, expr:Print):
+		raise NotImplementedError
+
+	def visitBlock(self, expr:Block):
 		raise NotImplementedError
 
 	def visitVar(self, expr:Var):
