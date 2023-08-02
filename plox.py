@@ -89,7 +89,7 @@ class PLox:
         self.report(token.line, where, message)
 
     def report(self, line: int, where: str, message: str) -> None:
-        print(f"line {line} - Error {where}: {message}")
+        print(f"line {line} - Syntax Error {where}: {message}")
         self.hadError = True
 
 

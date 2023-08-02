@@ -36,6 +36,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if self.repl:
             print(self._stringify(value))
 
+    def visitIf(self, stmt: If) -> None:
+        if self._isTruthy(self._eval(stmt.condition)):
+            self._exec(stmt.thenBranch)
+        elif stmt.elseBranch:
+            self._exec(stmt.elseBranch)
+
     def visitPrint(self, stmt: Print) -> None:
         value = self._eval(stmt.expression)
         print(self._stringify(value))
@@ -60,6 +66,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # if value:
         #     return value
         # raise RunTimeError(expr.name, f"Variable {{{expr.name.lexeme}}} must be initialized in order to be accessed")
+
+    def visitLogical(self, expr: Logical) -> object:
+        left = self._eval(expr.left)
+        if expr.operator.type == TT.OR:
+            if self._isTruthy(left): return left
+        elif expr.operator.type == TT.AND:
+            if not self._isTruthy(left):
+                return left
+        return self._eval(expr.right)
 
     def visitGrouping(self, expr: Grouping) -> object:
         return self._eval(expr.expression)

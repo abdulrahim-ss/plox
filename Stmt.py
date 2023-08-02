@@ -17,6 +17,25 @@ class Expression(Stmt):
 		return visitor.visitExpression(self)
 
 
+class If(Stmt):
+	def __init__(self, condition: Expr, thenBranch: Stmt, elseBranch: Stmt):
+		self.condition = condition
+		self.thenBranch = thenBranch
+		self.elseBranch = elseBranch
+
+	def accept(self, visitor):
+		return visitor.visitIf(self)
+
+
+class While(Stmt):
+	def __init__(self, condition: Expr, body: Stmt):
+		self.condition = condition
+		self.body = body
+
+	def accept(self, visitor):
+		return visitor.visitWhile(self)
+
+
 class Print(Stmt):
 	def __init__(self, expression: Expr):
 		self.expression = expression
@@ -43,15 +62,21 @@ class Var(Stmt):
 
 
 class StmtVisitor:
-	def visitExpression(self, expr:Expression):
+	def visitExpression(self, stmt: Expression):
 		raise NotImplementedError
 
-	def visitPrint(self, expr:Print):
+	def visitIf(self, stmt: If):
 		raise NotImplementedError
 
-	def visitBlock(self, expr:Block):
+	def visitWhile(self, stmt: While):
 		raise NotImplementedError
 
-	def visitVar(self, expr:Var):
+	def visitPrint(self, stmt: Print):
+		raise NotImplementedError
+
+	def visitBlock(self, stmt: Block):
+		raise NotImplementedError
+
+	def visitVar(self, stmt: Var):
 		raise NotImplementedError
 

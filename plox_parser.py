@@ -38,10 +38,21 @@ class PloxParser:
         return Var(name, initializer)
 
     def statement(self) -> Stmt:
+        if self._match(TT.IF): return self.ifStatement()
         if self._match(TT.PRINT): return self.printStatement()
         if self._match(TT.LEFT_BRACE): return Block(self.block())
         return self.expressionStatement()
     
+    def ifStatement(self) -> Stmt:
+        self._consume(TT.LEFT_PAREN, "Expected {(} after {'if'}")
+        condition = self.expression()
+        self._consume(TT.RIGHT_PAREN, "Expected {)} after if condition")
+        thenBranch : Stmt = self.statement()
+        elseBranch = None
+        if self._match(TT.ELSE):
+            elseBranch = self.statement()
+        return If(condition, thenBranch, elseBranch)
+
     def printStatement(self) -> Stmt:
         value = self.expression()
         self._consume(TT.SEMICOLON, "Expected {;} after value")
@@ -88,7 +99,7 @@ class PloxParser:
         return expr
 
     def conditional(self) -> Expr:
-        expr : Expr = self.equality()
+        expr : Expr = self.orExpr()
 
         if self._match(TT.QUESTION):
             then_clause : Expr = self.expression()
@@ -96,6 +107,26 @@ class PloxParser:
             else_clause : Expr = self.conditional()
             expr = Conditional(expr, then_clause, else_clause)
         
+        return expr
+    
+    def orExpr(self) -> Expr:
+        expr : Expr = self.andExpr()
+
+        while self._match(TT.OR):
+            operator : PloxToken = self._previous()
+            right = self.andExpr()
+            expr = Logical(expr, operator, right)
+
+        return expr
+
+    def andExpr(self) -> Expr:
+        expr : Expr = self.equality()
+
+        while self._match(TT.AND):
+            operator : PloxToken = self._previous()
+            right = self.equality()
+            expr = Logical(expr, operator, right)
+
         return expr
 
     def equality(self) -> Expr:

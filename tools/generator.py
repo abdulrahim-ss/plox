@@ -14,15 +14,15 @@ def define_ast(output_dir:str, name:str, types:dict) -> None:
 
         for type, fields in types.items():
             define_type(f, name, type, fields)
-
-        define_visitor(f, name, types)
+        arg = "expr" if name == "Expr" else "stmt"
+        define_visitor(f, name, types, arg)
 
         f.close()
 
-def define_visitor(file, basename:str, types: dict) -> None:
+def define_visitor(file, basename:str, types: dict, arg: str) -> None:
     file.write(f"class {basename}Visitor:\n")
     for type in types.keys():
-        file.write(f"\tdef visit{type}(self, expr:{type}):\n")
+        file.write(f"\tdef visit{type}(self, {arg}: {type}):\n")
         file.write("\t\traise NotImplementedError\n\n")
 
 def define_type(file, basename: str, classname:str, fields: list) -> None:
@@ -65,6 +65,11 @@ if __name__ == "__main__":
         "Literal": [
             {"type": "object", "name": "value"},
         ],
+        "Logical": [
+            {"type": "Expr", "name": "left"},
+            {"type": "PloxToken", "name": "operator"},
+            {"type": "Expr", "name": "right"},
+        ],
         "Unary": [
             {"type": "PloxToken", "name": "operator"},
             {"type": "Expr", "name": "right"},
@@ -81,6 +86,15 @@ if __name__ == "__main__":
     stmt = {
         "Expression": [
             {"type": "Expr", "name": "expression"},
+        ],
+        "If": [
+            {"type": "Expr", "name": "condition"},
+            {"type": "Stmt", "name": "thenBranch"},
+            {"type": "Stmt", "name": "elseBranch"},
+        ],
+        "While": [
+            {"type": "Expr", "name": "condition"},
+            {"type": "Stmt", "name": "body"},
         ],
         "Print": [
             {"type": "Expr", "name": "expression"},

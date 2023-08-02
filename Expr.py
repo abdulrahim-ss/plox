@@ -40,6 +40,16 @@ class Literal(Expr):
 		return visitor.visitLiteral(self)
 
 
+class Logical(Expr):
+	def __init__(self, left: Expr, operator: PloxToken, right: Expr):
+		self.left = left
+		self.operator = operator
+		self.right = right
+
+	def accept(self, visitor):
+		return visitor.visitLogical(self)
+
+
 class Unary(Expr):
 	def __init__(self, operator: PloxToken, right: Expr):
 		self.operator = operator
@@ -68,24 +78,27 @@ class Variable(Expr):
 
 
 class ExprVisitor:
-	def visitAssign(self, expr:Assign):
+	def visitAssign(self, expr: Assign):
 		raise NotImplementedError
 
-	def visitBinary(self, expr:Binary):
+	def visitBinary(self, expr: Binary):
 		raise NotImplementedError
 
-	def visitGrouping(self, expr:Grouping):
+	def visitGrouping(self, expr: Grouping):
 		raise NotImplementedError
 
-	def visitLiteral(self, expr:Literal):
+	def visitLiteral(self, expr: Literal):
 		raise NotImplementedError
 
-	def visitUnary(self, expr:Unary):
+	def visitLogical(self, expr: Logical):
 		raise NotImplementedError
 
-	def visitConditional(self, expr:Conditional):
+	def visitUnary(self, expr: Unary):
 		raise NotImplementedError
 
-	def visitVariable(self, expr:Variable):
+	def visitConditional(self, expr: Conditional):
+		raise NotImplementedError
+
+	def visitVariable(self, expr: Variable):
 		raise NotImplementedError
 
