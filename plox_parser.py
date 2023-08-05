@@ -13,6 +13,7 @@ class PloxParser:
         self.tokens = tokens
         self.current = 0
         self.error = error
+        self.loop_count = 0
 
     def parse(self) -> List[Stmt]:
         statements : List[Stmt, None] = []
@@ -39,10 +40,18 @@ class PloxParser:
 
     def statement(self) -> Stmt:
         if self._match(TT.IF): return self.ifStatement()
+        if self._match(TT.WHILE): return self.whileStatement()
+        if self._match(TT.FOR): return self.forStatement()
+        if self._match(TT.BREAK): return self.breakStatement()
+        if self._match(TT.CONTINUE): return self.continueStatement()
         if self._match(TT.PRINT): return self.printStatement()
         if self._match(TT.LEFT_BRACE): return Block(self.block())
+        if self._match(TT.SEMICOLON): return self.emptyStatement()
         return self.expressionStatement()
-    
+
+    def emptyStatement(self) -> Stmt:
+        return Empty()
+
     def ifStatement(self) -> Stmt:
         self._consume(TT.LEFT_PAREN, "Expected {(} after {'if'}")
         condition = self.expression()
@@ -52,6 +61,60 @@ class PloxParser:
         if self._match(TT.ELSE):
             elseBranch = self.statement()
         return If(condition, thenBranch, elseBranch)
+
+    def whileStatement(self) -> Stmt:
+        self.loop_count += 1
+        self._consume(TT.LEFT_PAREN, "Expected {(} after {'while'}")
+        condition = self.expression()
+        self._consume(TT.RIGHT_PAREN, "Expected {)} after if condition")
+        body : Stmt = self.statement()
+        body = Block([body, Empty])
+        self.loop_count -= 1
+        return While(condition, body)
+
+    def forStatement(self) -> Stmt:
+        self.loop_count += 1
+        self._consume(TT.LEFT_PAREN, "Expected {(} after {'for'}")
+        initializer = None
+        if self._match(TT.SEMICOLON): initializer = None
+        elif self._match(TT.VAR): initializer = self.varDeclaration()
+        else: initializer = self.expressionStatement()
+
+        condition = None
+        if not self._check(TT.SEMICOLON):
+            condition = self.expression()
+        self._consume(TT.SEMICOLON, "Expected {;} after loop condition")
+
+        increment = None
+        if not self._check(TT.RIGHT_PAREN):
+            increment = self.expression()
+        self._consume(TT.RIGHT_PAREN, "Expected {)} after for clauses")
+        body = self.statement()
+
+        if increment:
+            body = Block([body, Expression(increment)])
+
+        if not condition:
+            condition = Literal(True)
+        body = While(condition, body)
+
+        if initializer:
+            body = Block([initializer, body])
+
+        self.loop_count -= 1
+        return body
+
+    def breakStatement(self) -> Stmt:
+        if self.loop_count == 0:
+            raise self._error(self._previous(), "break statement called but no loop was found")
+        self._consume(TT.SEMICOLON, "Expected {;} after break")
+        return Break()
+
+    def continueStatement(self) -> Stmt:
+        if self.loop_count == 0:
+            raise self._error(self._previous(), "continue statement called but no loop was found")
+        self._consume(TT.SEMICOLON, "Expected {;} after continue")
+        return Continue()
 
     def printStatement(self) -> Stmt:
         value = self.expression()

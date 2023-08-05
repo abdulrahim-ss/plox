@@ -13,11 +13,11 @@ class Environment:
 
     def assign_existing(self, token: PloxToken, value: object) -> None:
         name = token.lexeme
-        if self.values.get(name):
+        if name in self.values.keys():
             self.values[name] = value
             return
         if self.enclosing is not None:
-            self.enclosing.assign(name, value)
+            self.enclosing.assign_existing(token, value)
             return
         raise self.raisable(token, f"Undefined variable {{{name}}}")
 

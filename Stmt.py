@@ -61,6 +61,30 @@ class Var(Stmt):
 		return visitor.visitVar(self)
 
 
+class Break(Stmt):
+	def __init__(self):
+		pass
+
+	def accept(self, visitor):
+		return visitor.visitBreak(self)
+
+
+class Continue(Stmt):
+	def __init__(self):
+		pass
+
+	def accept(self, visitor):
+		return visitor.visitContinue(self)
+
+
+class Empty(Stmt):
+	def __init__(self):
+		pass
+
+	def accept(self, visitor):
+		return visitor.visitEmpty(self)
+
+
 class StmtVisitor:
 	def visitExpression(self, stmt: Expression):
 		raise NotImplementedError
@@ -78,5 +102,14 @@ class StmtVisitor:
 		raise NotImplementedError
 
 	def visitVar(self, stmt: Var):
+		raise NotImplementedError
+
+	def visitBreak(self, stmt: Break):
+		raise NotImplementedError
+
+	def visitContinue(self, stmt: Continue):
+		raise NotImplementedError
+
+	def visitEmpty(self, stmt: Empty):
 		raise NotImplementedError
 

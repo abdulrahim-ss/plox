@@ -31,9 +31,13 @@ def define_type(file, basename: str, classname:str, fields: list) -> None:
     for field in fields:
         init_args += ", " + field['name'] + ": " + field["type"]
     file.write(f"\tdef __init__(self{init_args}):\n")
-    for field in fields:
-        temp_name = field['name']
-        file.write(f"\t\tself.{temp_name} = {temp_name}\n")
+    #file.write(f"\t\tprint(\"generating {basename} {classname}\")\n")
+    if fields:
+        for field in fields:
+            temp_name = field['name']
+            file.write(f"\t\tself.{temp_name} = {temp_name}\n")
+    else:
+        file.write(f"\t\tpass\n")
 
     file.write(f"\n\tdef accept(self, visitor):\n")
     file.write(f"\t\treturn visitor.visit{classname}(self)\n")
@@ -83,6 +87,7 @@ if __name__ == "__main__":
             {"type": "PloxToken", "name": "name"},
         ],
     }
+
     stmt = {
         "Expression": [
             {"type": "Expr", "name": "expression"},
@@ -105,6 +110,12 @@ if __name__ == "__main__":
         "Var": [
             {"type": "PloxToken", "name": "name"},
             {"type": "Expr", "name": "Initializer"},
+        ],
+        "Break": [
+        ],
+        "Continue": [
+        ],
+        "Empty": [
         ],
     }
     define_ast(output, "Expr", expr)

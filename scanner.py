@@ -23,6 +23,8 @@ class Scanner:
         'true':   TT.TRUE,
         'var':    TT.VAR,
         'while':  TT.WHILE,
+        'break':    TT.BREAK,
+        'continue':  TT.CONTINUE,
     }
 
     def __init__(self, source: str, error:Callable[[int, str], None]) -> None:

@@ -45,24 +45,24 @@ class PLox:
     def runPrompt(self) -> None:
         prompt = PloxCmd(self)
         prompt.cmdloop()
-    #     intro = """\
-    # =================================================================
-    #         § PLOX - The Python 🐍 implementation of LOX §
-    # =================================================================\
-    # """
-    #     print(intro)
-    #     while True:
-    #         try:
-    #             #line = input(f"[{os.getcwd()}] § ")
-    #             line = input("§ ")
-    #         except EOFError:
-    #             print("\nBye 👋")
-    #             break
-    #         if line == "exit":
-    #             print("Bye 👋")
-    #             break
-    #         self.run(line)
-    #         self.hadError = False
+        #     intro = """\
+        # =================================================================
+        #         § PLOX - The Python 🐍 implementation of LOX §
+        # =================================================================\
+        # """
+        #     print(intro)
+        #     while True:
+        #         try:
+        #             #line = input(f"[{os.getcwd()}] § ")
+        #             line = input("§ ")
+        #         except EOFError:
+        #             print("\nBye 👋")
+        #             break
+        #         if line == "exit":
+        #             print("Bye 👋")
+        #             break
+        #         self.run(line)
+        #         self.hadError = False
 
     def run(self, source: str) -> None:
         scanner = Scanner(source, self.scanning_error)

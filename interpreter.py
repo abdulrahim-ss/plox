@@ -14,26 +14,39 @@ class RunTimeError(RuntimeError):
         self.token = token
 
 
+class BreakException(Exception):
+    pass
+
+
+class ContinueException(Exception):
+    pass
+
+
 class Interpreter(ExprVisitor, StmtVisitor):
     #TODO: get the comma operator to work
     def __init__(self, error: Callable[[Type[Exception]], None], repl: bool = False):
         self.error = error
         self.repl = repl
+        self.print_flag = False
         self.env = Environment(RunTimeError)
 
     def interpret(self, statements: List[Stmt]) -> None:
         try:
             for statement in statements:
+                self.print_flag = False
                 self._exec(statement)
         except RunTimeError as err:
             self.error(err)
+
+    def visitEmpty(self, stmt: Empty) -> None:
+        return
 
     def visitBlock(self, stmt: Block) -> None:
         self._exec_block(stmt.statements, Environment(RunTimeError, self.env))
 
     def visitExpression(self, stmt: Expression) -> None:
         value = self._eval(stmt.expression)
-        if self.repl:
+        if self.repl and not self.print_flag:
             print(self._stringify(value))
 
     def visitIf(self, stmt: If) -> None:
@@ -42,7 +55,25 @@ class Interpreter(ExprVisitor, StmtVisitor):
         elif stmt.elseBranch:
             self._exec(stmt.elseBranch)
 
+    def visitWhile(self, stmt: While) -> None:
+        # import time
+        while self._isTruthy(self._eval(stmt.condition)):
+            try:
+                self._exec(stmt.body)
+            except BreakException:
+                break
+            except ContinueException:
+                self._exec(stmt.body.statements[-1])
+                continue
+
+    def visitBreak(self, stmt: Break) -> None:
+        raise BreakException
+
+    def visitContinue(self, stmt: Continue) -> None:
+        raise ContinueException
+
     def visitPrint(self, stmt: Print) -> None:
+        self.print_flag = True
         value = self._eval(stmt.expression)
         print(self._stringify(value))
 
@@ -165,11 +196,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if isinstance(obj, float) and obj == 0:
             return False
         return True
-    
+
     @staticmethod
     def _isEqual(a: object, b: object) -> bool:
         return (a is None) ^ (b is None)
-    
+
     @staticmethod
     def _checkNumber(operator: Expr, *operands: object) -> None:
         if len(operands) == 1:
