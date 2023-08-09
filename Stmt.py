@@ -61,6 +61,24 @@ class Var(Stmt):
 		return visitor.visitVar(self)
 
 
+class Function(Stmt):
+	def __init__(self, name: PloxToken, function: Expr):
+		self.name = name
+		self.function = function
+
+	def accept(self, visitor):
+		return visitor.visitFunction(self)
+
+
+class Return(Stmt):
+	def __init__(self, keyword: PloxToken, value: Expr):
+		self.keyword = keyword
+		self.value = value
+
+	def accept(self, visitor):
+		return visitor.visitReturn(self)
+
+
 class Break(Stmt):
 	def __init__(self):
 		pass
@@ -102,6 +120,12 @@ class StmtVisitor:
 		raise NotImplementedError
 
 	def visitVar(self, stmt: Var):
+		raise NotImplementedError
+
+	def visitFunction(self, stmt: Function):
+		raise NotImplementedError
+
+	def visitReturn(self, stmt: Return):
 		raise NotImplementedError
 
 	def visitBreak(self, stmt: Break):

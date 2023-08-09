@@ -1,3 +1,5 @@
+from typing import List
+
 from plox_token import PloxToken
 
 class Expr:
@@ -59,6 +61,16 @@ class Unary(Expr):
 		return visitor.visitUnary(self)
 
 
+class Call(Expr):
+	def __init__(self, callee: Expr, paren: PloxToken, arguments: List[Expr]):
+		self.callee = callee
+		self.paren = paren
+		self.arguments = arguments
+
+	def accept(self, visitor):
+		return visitor.visitCall(self)
+
+
 class Conditional(Expr):
 	def __init__(self, condition: Expr, then_clause: Expr, else_clause: Expr):
 		self.condition = condition
@@ -75,6 +87,15 @@ class Variable(Expr):
 
 	def accept(self, visitor):
 		return visitor.visitVariable(self)
+
+
+class FuncExpr(Expr):
+	def __init__(self, params: List[PloxToken], body: list):
+		self.params = params
+		self.body = body
+
+	def accept(self, visitor):
+		return visitor.visitFuncExpr(self)
 
 
 class ExprVisitor:
@@ -96,9 +117,15 @@ class ExprVisitor:
 	def visitUnary(self, expr: Unary):
 		raise NotImplementedError
 
+	def visitCall(self, expr: Call):
+		raise NotImplementedError
+
 	def visitConditional(self, expr: Conditional):
 		raise NotImplementedError
 
 	def visitVariable(self, expr: Variable):
+		raise NotImplementedError
+
+	def visitFuncExpr(self, expr: FuncExpr):
 		raise NotImplementedError
 

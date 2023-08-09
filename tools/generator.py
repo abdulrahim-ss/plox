@@ -3,8 +3,7 @@ import argparse
 def define_ast(output_dir:str, name:str, types:dict) -> None:
     path = output_dir + "/" + name + ".py"
     with open(path, "w") as f:
-        if name != "Expr":
-            f.write("from typing import List\n\n")
+        f.write("from typing import List\n\n")
         f.write("from plox_token import PloxToken\n")
         if name != "Expr":
             f.write("from Expr import Expr\n\n")
@@ -78,6 +77,11 @@ if __name__ == "__main__":
             {"type": "PloxToken", "name": "operator"},
             {"type": "Expr", "name": "right"},
         ],
+        "Call": [
+            {"type": "Expr", "name": "callee"},
+            {"type": "PloxToken", "name": "paren"},
+            {"type": "List[Expr]", "name": "arguments"},
+        ],
         "Conditional": [
             {"type": "Expr", "name": "condition"},
             {"type": "Expr", "name": "then_clause"},
@@ -85,6 +89,10 @@ if __name__ == "__main__":
         ],
         "Variable": [
             {"type": "PloxToken", "name": "name"},
+        ],
+        "FuncExpr": [
+            {"type": "List[PloxToken]", "name": "params"},
+            {"type": "list", "name": "body"},
         ],
     }
 
@@ -110,6 +118,14 @@ if __name__ == "__main__":
         "Var": [
             {"type": "PloxToken", "name": "name"},
             {"type": "Expr", "name": "Initializer"},
+        ],
+        "Function": [
+            {"type": "PloxToken", "name": "name"},
+            {"type": "Expr", "name": "function"},
+        ],
+        "Return": [
+            {"type": "PloxToken", "name": "keyword"},
+            {"type": "Expr", "name": "value"},
         ],
         "Break": [
         ],

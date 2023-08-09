@@ -1,12 +1,11 @@
 from typing import List, Optional, Callable
+from error_types import ParserError
 
 from plox_token import PloxToken
 from tokenType import TokenType, TokenType as TT
 from Expr import *
 from Stmt import *
 
-class ParserError(Exception):
-    pass
 
 class PloxParser:
     def __init__(self, tokens: List[PloxToken], error:Callable[[PloxToken, str], None]) -> None:
@@ -25,10 +24,30 @@ class PloxParser:
         try:
             if self._match(TT.VAR):
                 return self.varDeclaration()
+            if self._match(TT.FUN) and self._check(TT.IDENTIFIER):
+                return self.function("function")
             return self.statement()
         except ParserError:
             self._sync()
             return None
+
+    def function(self, kind: str) -> Stmt:
+        name : PloxToken = self._consume(TT.IDENTIFIER, f"Expected a {kind} name")
+        return Function(name, self.functionBody(kind))
+
+    def functionBody(self, kind: str) -> Expr:
+        self._consume(TT.LEFT_PAREN, f"Expected {{(}} after {kind} name")
+        params : List[PloxToken] = []
+        if not self._check(TT.RIGHT_PAREN):
+            params.append(self._consume(TT.IDENTIFIER, "Expected parameter name"))
+            while self._match(TT.COMMA):
+                if len(params) >= 255:
+                    self._error(self._peek(), "Too many parameters! The maximum number of params allowed is 255")
+                params.append(self._consume(TT.IDENTIFIER, "Expected parameter name"))
+        self._consume(TT.RIGHT_PAREN, "Expected {)} after parameters")
+        self._consume(TT.LEFT_BRACE, "Expected { \"{\" } before %s body"%kind)
+        body : List[Stmt] = self.block()
+        return FuncExpr(params, body)
 
     def varDeclaration(self) -> Stmt:
         name : PloxToken = self._consume(TT.IDENTIFIER, "Expected a variable name")
@@ -45,12 +64,21 @@ class PloxParser:
         if self._match(TT.BREAK): return self.breakStatement()
         if self._match(TT.CONTINUE): return self.continueStatement()
         if self._match(TT.PRINT): return self.printStatement()
+        if self._match(TT.RETURN): return self.returnStatement()
         if self._match(TT.LEFT_BRACE): return Block(self.block())
         if self._match(TT.SEMICOLON): return self.emptyStatement()
         return self.expressionStatement()
 
     def emptyStatement(self) -> Stmt:
         return Empty()
+
+    def returnStatement(self) -> Stmt:
+        keyword : PloxToken = self._previous()
+        value = None
+        if not self._check(TT.SEMICOLON):
+            value = self.expression()
+        self._consume(TT.SEMICOLON, "Expected {;} after return value")
+        return Return(keyword, value)
 
     def ifStatement(self) -> Stmt:
         self._consume(TT.LEFT_PAREN, "Expected {(} after {'if'}")
@@ -136,7 +164,8 @@ class PloxParser:
         return statements
 
     def expression(self) -> Expr:
-        return self.comma()
+        #skip comma operator for now
+        return self.assignment()
 
     def comma(self) -> Expr:
         expr : Expr = self.assignment()
@@ -238,18 +267,41 @@ class PloxParser:
             right: Expr = self.unary()
             return Unary(operator, right)
         
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr:
+        expr : Expr = self.primary()
+
+        while True:
+            if self._match(TT.LEFT_PAREN):
+                expr = self.finishCall(expr)
+            else: break
+
+        return expr
+
+    def finishCall(self, callee) -> Expr:
+        args = []
+        if not self._check(TT.RIGHT_PAREN):
+            args.append(self.expression())
+            while self._match(TT.COMMA):
+                if len(args) >= 255:
+                    self._error(self._peek(), "Too many arguments! The maximum number of args allowed is 255")
+                args.append(self.expression())
+
+        paren = self._consume(TT.RIGHT_PAREN, "Expected {)} after arguments")
+        return Call(callee, paren, args)
 
     def primary(self) -> Expr:
         if self._match(TT.FALSE): return Literal(False)
         if self._match(TT.TRUE): return Literal(True)
         if self._match(TT.NIL): return Literal(None)
+        if self._match(TT.FUN): return self.functionBody("function")
 
         if self._match(TT.NUMBER, TT.STRING): return Literal(self._previous().literal)
 
         if self._match(TT.LEFT_PAREN):
             expr: Expr = self.expression()
-            self._consume(TT.RIGHT_PAREN, "Expected ')' after expression")
+            self._consume(TT.RIGHT_PAREN, "Expected {)} after expression")
             return Grouping(expr)
         
         if self._match(TT.IDENTIFIER): return Variable(self._previous())

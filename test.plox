@@ -1,3 +1,13 @@
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+var start = clock();
+for (var i = 0; i < 20; i = i + 1) {
+  print fib(i);
+}
+print clock() - start;
 /*var a = 0;
 var temp;
 var b = 1;
@@ -10,14 +20,17 @@ while (a < 100){
 
 /*var a = 0;
 var temp;
-
+var start = clock();
 for (var b = 1; a < 10000; b = temp + b) {
   print a;
   temp = a;
   a = b;
-}*/
+}
+var time = clock() - start;
+print "elapsed time: " + time;*/
 
+/*
 for (var b = 0; b <= 20; b = 1 + b){
   if (b == 10) continue;
   print b;
-}
+}*/

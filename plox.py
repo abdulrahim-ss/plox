@@ -18,6 +18,7 @@ from interpreter import Interpreter
 class PLox:
     def __init__(self, args: List[str]):
         self.args = args
+        self.repl = False
 
         self.hadError = False
         self.hadRunTimeError = False
@@ -31,7 +32,8 @@ class PLox:
             self.runFile(self.args[0])
             
         else:
-            self.interpreter = Interpreter(self.runtime_error, repl=True)
+            self.repl = True
+            self.interpreter = Interpreter(self.runtime_error, repl=self.repl)
             self.runPrompt()
 
     def runFile(self, path) -> None:
@@ -72,12 +74,18 @@ class PLox:
         statements: List[Stmt] = parser.parse()
 
         if self.hadError: return
-        self.interpreter.interpret(statements)
+        try:
+            self.interpreter.interpret(statements)
+        except KeyboardInterrupt:
+            print("\nEXCEPTION: Interrupted by user")
         # print(AstPrinter().stringify(expression))
 
     ############### ERROR handling #########################
     def runtime_error(self, err: Type[Exception]) -> None:
-        print(f"RUNTIME ERROR [at line {err.token.line}]:")
+        if self.repl:
+            print(f"RUNTIME ERROR:")
+        else:
+            print(f"RUNTIME ERROR [at line {err.token.line}]:")
         print("\t", err)
         self.hadRunTimeError = True
 
@@ -85,16 +93,26 @@ class PLox:
         self.report(line, "", message)
 
     def parsing_error(self, token: PloxToken, message: str) -> None:
-        where = "at the end" if token.type == TT.EOF else f"at {{{token.lexeme}}}"
+        char = token.lexeme
+        if char == "{":
+            char = " \"{\" "
+        if char == "}":
+            char = " \"}\" "
+        where = "at the end" if token.type == TT.EOF else f"at {{{char}}}"
         self.report(token.line, where, message)
 
     def report(self, line: int, where: str, message: str) -> None:
-        print(f"line {line} - Syntax Error {where}: {message}")
+        if self.repl:
+            print(f"Syntax Error {where}: {message}")
+        else:
+            print(f"line {line} - Syntax Error {where}: {message}")
         self.hadError = True
 
 
 class PloxCmd(Cmd):
     prompt = "§ "
+    current_command : str = ""
+    count = 0
     def __init__(self, plox) -> None:
         intro = """\
 =================================================================
@@ -115,7 +133,35 @@ class PloxCmd(Cmd):
         print("\nBye 👋")
         exit(0)
 
+    def do_clear(self, arg) -> None:
+        """CLEAR SCREEN"""
+        print("\033c")
+
+    def emptyline(self) -> None:
+        if self.current_command != "":
+            self.plox.run(self.current_command)
+            self.current_command = ""
+            self.prompt = "§ "
+            self.plox.hadError = False
+
     def default(self, line: str) -> None:
+        if any([match in line for match in ["class", "for", "while", "if", "else","fun"]]) and not "}" in line:
+            self.current_command += line
+            self.count += 1
+            self.prompt = "... "
+            return
+        if self.current_command != "": # and "}" not in line
+            self.current_command += line
+            return
+        # if self.current_command != "" and "}" in line:
+        #     self.count -= 1
+        #     if self.count == 0:
+        #         self.current_command += line
+        #         self.plox.run(self.current_command)
+        #         self.current_command = ""
+        #         self.plox.hadError = False
+        #         self.prompt = "§ "
+        #     return
         self.plox.run(line)
         self.plox.hadError = False
 

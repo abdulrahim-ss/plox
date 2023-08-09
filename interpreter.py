@@ -1,4 +1,5 @@
 from typing import List, Any, Callable, Type
+from error_types import RunTimeError
 
 from Expr import *
 from Expr import Assign
@@ -6,20 +7,10 @@ from Stmt import *
 from Stmt import Expression, Var
 from plox_token import PloxToken
 from tokenType import TokenType as TT
+from plox_callable import *
+from unwind_exceptions import *
+from natives import *
 from environment import Environment
-
-class RunTimeError(RuntimeError):
-    def __init__(self, token: PloxToken, msg: str):
-        super().__init__(msg)
-        self.token = token
-
-
-class BreakException(Exception):
-    pass
-
-
-class ContinueException(Exception):
-    pass
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -28,7 +19,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.error = error
         self.repl = repl
         self.print_flag = False
-        self.env = Environment(RunTimeError)
+        self.globals = Environment(RunTimeError) # Global scope objects reside on line -9
+        self.env = self.globals
+        self.natives()
+
+    def natives(self) -> None:
+        self.globals.assign(PloxToken(TT.IDENTIFIER, "clock", None, -9), Clock())
+        self.globals.assign(PloxToken(TT.IDENTIFIER, "sleep", None, -9), Sleep())
+        self.globals.assign(PloxToken(TT.IDENTIFIER, "struct", None, -9), Struct())
+        self.globals.assign(PloxToken(TT.IDENTIFIER, "input", None, -9), Input())
 
     def interpret(self, statements: List[Stmt]) -> None:
         try:
@@ -56,7 +55,6 @@ class Interpreter(ExprVisitor, StmtVisitor):
             self._exec(stmt.elseBranch)
 
     def visitWhile(self, stmt: While) -> None:
-        # import time
         while self._isTruthy(self._eval(stmt.condition)):
             try:
                 self._exec(stmt.body)
@@ -82,6 +80,20 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.Initializer is not None:
             value = self._eval(stmt.Initializer)
         self.env.assign(stmt.name, value)
+
+    def visitFunction(self, stmt: Function) -> None:
+        name = stmt.name
+        func = ploxFunction(name.lexeme, stmt.function, self.env)
+        self.env.assign(name, func)
+
+    def visitReturn(self, stmt: Return) -> None:
+        value = None
+        if stmt.value:
+            value = self._eval(stmt.value)
+        raise ReturnException(value)
+
+    def visitFuncExpr(self, expr: FuncExpr) -> object:
+        return ploxFunction(None, expr, self.env)
 
     def visitAssign(self, expr: Assign) -> object:
         value = self._eval(expr.value)
@@ -161,7 +173,21 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 return left == right
             case TT.BANG_EQUAL:
                 return not (left == right)
-            
+
+    def visitCall(self, expr: Call) -> object:
+        callee : ploxCallable = self._eval(expr.callee)
+
+        args = []
+        for arg in expr.arguments:
+            args.append({"expr": arg, "value": self._eval(arg)})
+        if not isinstance(callee, ploxCallable):
+            raise RunTimeError(expr.paren, "Tried to call non-callable object")
+
+        if len(args) != callee.arity():
+            raise RunTimeError(expr.paren,f"Expected {callee.arity()} arguments, but got {len(args)}")
+
+        return callee.call(self, args)
+
     def visitConditional(self, expr: Conditional) -> object:
         if self._isTruthy(self._eval(expr.condition)):
             return self._eval(expr.then_clause)
@@ -185,7 +211,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if str(value).endswith(".0"): return str(value).split(".")[0]
         if value is True: return "true"
         if value is False: return "false"
-        return str(value)
+        return bytes(str(value), "utf-8").decode("unicode_escape")
 
     @staticmethod
     def _isTruthy(obj: object) -> bool:
