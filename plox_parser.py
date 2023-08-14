@@ -24,7 +24,7 @@ class PloxParser:
         try:
             if self._match(TT.VAR):
                 return self.varDeclaration()
-            if self._match(TT.FUN) and self._check(TT.IDENTIFIER):
+            if self._check(TT.FUN) and self._checkNext(TT.IDENTIFIER):
                 return self.function("function")
             return self.statement()
         except ParserError:
@@ -32,6 +32,7 @@ class PloxParser:
             return None
 
     def function(self, kind: str) -> Stmt:
+        self._advance()
         name : PloxToken = self._consume(TT.IDENTIFIER, f"Expected a {kind} name")
         return Function(name, self.functionBody(kind))
 
@@ -336,6 +337,13 @@ class PloxParser:
         if self._isAtEnd():
             return False
         return self._peek().type == type
+
+    def _checkNext(self, type: TokenType) -> bool:
+        if self._isAtEnd():
+            return False
+        if self.tokens[self.current + 1].type == TT.EOF:
+            return False
+        return self.tokens[self.current + 1].type == type
 
     def _isAtEnd(self) -> bool:
         return self._peek().type == TT.EOF

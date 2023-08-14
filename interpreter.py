@@ -1,4 +1,4 @@
-from typing import List, Any, Callable, Type
+from typing import List, Dict, Any, Callable, Type
 from error_types import RunTimeError
 
 from Expr import *
@@ -20,6 +20,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.repl = repl
         self.print_flag = False
         self.globals = Environment(RunTimeError) # Global scope objects reside on line -9
+        self.locals : Dict[Expr, int] = dict()
         self.env = self.globals
         self.natives()
 
@@ -97,18 +98,28 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visitAssign(self, expr: Assign) -> object:
         value = self._eval(expr.value)
-        self.env.assign_existing(expr.name, value)
+        distance = self.locals.get(expr)
+        if distance:
+            self.env.assignAt(distance, expr.name, value)
+        else:
+            self.globals.assign_existing(expr.name, value)
         return value
 
     def visitLiteral(self, expr: Literal) -> object:
         return expr.value
 
     def visitVariable(self, expr: Variable) -> object:
-        value = self.env.fetch(expr.name)
+        value = self.look_up_var(expr.name, expr)
         return value
         # if value:
         #     return value
         # raise RunTimeError(expr.name, f"Variable {{{expr.name.lexeme}}} must be initialized in order to be accessed")
+
+    def look_up_var(self, name: PloxToken, expr: Expr) -> object:
+        distance = self.locals.get(expr)
+        if distance:
+            return self.env.fetchAt(distance, name)
+        return self.globals.fetch(name)
 
     def visitLogical(self, expr: Logical) -> object:
         left = self._eval(expr.left)
@@ -240,6 +251,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def _exec(self, stmt: Stmt) -> None:
         stmt.accept(self)
+
+    def _resolve(self, expr: Expr, depth: int) -> None:
+        self.locals[expr] = depth
 
     def _exec_block(self, statements: List[Stmt], env: Environment) -> None:
         previous = self.env

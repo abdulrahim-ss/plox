@@ -9,6 +9,7 @@ from Stmt import Stmt
 
 from scanner import Scanner
 from plox_parser import PloxParser
+from resolver import Resolver
 from interpreter import Interpreter
 
 #temp import
@@ -74,6 +75,10 @@ class PLox:
         statements: List[Stmt] = parser.parse()
 
         if self.hadError: return
+        resolver = Resolver(self.interpreter, self.resolve_error)
+        resolver.resolve(statements)
+        if self.hadError: return
+
         try:
             self.interpreter.interpret(statements)
         except KeyboardInterrupt:
@@ -90,7 +95,10 @@ class PLox:
         self.hadRunTimeError = True
 
     def scanning_error(self, line: int, message: str) -> None:
-        self.report(line, "", message)
+        self.report(line, "Syntax Error", message)
+
+    def resolve_error(self, token: PloxToken, message: str) -> None:
+        self.report(token.line, "Resolution Error", message)
 
     def parsing_error(self, token: PloxToken, message: str) -> None:
         char = token.lexeme
@@ -98,14 +106,14 @@ class PLox:
             char = " \"{\" "
         if char == "}":
             char = " \"}\" "
-        where = "at the end" if token.type == TT.EOF else f"at {{{char}}}"
+        where = "Syntax Error at the end" if token.type == TT.EOF else f"Syntax Error at {{{char}}}"
         self.report(token.line, where, message)
 
     def report(self, line: int, where: str, message: str) -> None:
         if self.repl:
-            print(f"Syntax Error {where}: {message}")
+            print(f"{where}: {message}")
         else:
-            print(f"line {line} - Syntax Error {where}: {message}")
+            print(f"line {line} - {where}: {message}")
         self.hadError = True
 
 
@@ -145,7 +153,18 @@ class PloxCmd(Cmd):
             self.plox.hadError = False
 
     def default(self, line: str) -> None:
-        if any([match in line for match in ["class", "for", "while", "if", "else","fun"]]) and not "}" in line:
+        if any([match in line for match in [
+                                            "class",
+                                            "for",
+                                            "while",
+                                            "if",
+                                            "else",
+                                            "fun",
+                                            "{",
+                                            "(",
+                                            "["
+                                            ]
+                ]) and not any([match in line for match in [")","}","]"]]):
             self.current_command += line
             self.count += 1
             self.prompt = "... "

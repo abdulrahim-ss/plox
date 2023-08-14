@@ -51,7 +51,11 @@ class Struct(ploxCallable):
         callable = args[0]["value"]
         if not isinstance(callable, ploxFunction):
             return "not implemented"
-        return "\n".join(self._struct(args[0]["expr"].name.lexeme, callable, interpreter))
+        try:
+            inp = args[0]["expr"].name.lexeme
+        except:
+            inp = "EXPRESSION"
+        return "\n".join(self._struct(inp, callable, interpreter))
     
     def __repr__(self) -> str:
         return "<native fun>"
@@ -66,6 +70,8 @@ class Struct(ploxCallable):
         else:
             yield "   Type: anonymous function"
         yield "   Parameters:"
+        if not callable.declaration.params:
+            yield "      NONE"
         for i, param in enumerate(callable.declaration.params):
             yield f"      - param[{i}]:   ({param.lexeme})"
         # yield "   Returns:"

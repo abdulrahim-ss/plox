@@ -1,4 +1,26 @@
-fun fib(n) {
+/* {
+    var a = 1;
+    {
+        var b = 2;
+        {
+            var c = 3;
+            c; b; a;
+        }
+    }
+
+} */
+
+var a = "global";
+{
+    fun showA() {
+        print a;
+    }
+    showA();
+    var a = "block";
+    showA();
+}
+
+/*fun fib(n) {
   if (n <= 1) return n;
   return fib(n - 2) + fib(n - 1);
 }
@@ -7,7 +29,7 @@ var start = clock();
 for (var i = 0; i < 20; i = i + 1) {
   print fib(i);
 }
-print clock() - start;
+print clock() - start;*/
 /*var a = 0;
 var temp;
 var b = 1;
