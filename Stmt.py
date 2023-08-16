@@ -95,6 +95,15 @@ class Continue(Stmt):
 		return visitor.visitContinue(self)
 
 
+class ClassStmt(Stmt):
+	def __init__(self, name: PloxToken, methods: List[Function]):
+		self.name = name
+		self.methods = methods
+
+	def accept(self, visitor):
+		return visitor.visitClassStmt(self)
+
+
 class Empty(Stmt):
 	def __init__(self):
 		pass
@@ -132,6 +141,9 @@ class StmtVisitor:
 		raise NotImplementedError
 
 	def visitContinue(self, stmt: Continue):
+		raise NotImplementedError
+
+	def visitClassStmt(self, stmt: ClassStmt):
 		raise NotImplementedError
 
 	def visitEmpty(self, stmt: Empty):

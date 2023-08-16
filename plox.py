@@ -160,11 +160,11 @@ class PloxCmd(Cmd):
                                             "if",
                                             "else",
                                             "fun",
-                                            "{",
-                                            "(",
-                                            "["
+                                            # "{",
+                                            # "(",
+                                            # "["
                                             ]
-                ]) and not any([match in line for match in [")","}","]"]]):
+                ]): # and not any([match in line for match in [")","}","]"]])
             self.current_command += line
             self.count += 1
             self.prompt = "... "

@@ -10,11 +10,12 @@ class Resolver(StmtVisitor, ExprVisitor):
         self.error = error
         self.scopes: List[dict] = []
         self.current_function = None
+        self.current_class = None
 
     def visitBlock(self, stmt: Block) -> None:
-        self.beginScope()
+        self.begin_scope()
         self.resolve(stmt.statements)
-        self.endScope()
+        self.end_scope()
 
     def visitVar(self, stmt: Var) -> None:
         self.declare(stmt.name)
@@ -30,6 +31,21 @@ class Resolver(StmtVisitor, ExprVisitor):
     def visitAssign(self, expr: Assign) -> None:
         self._resolve(expr.value)
         self.resolveLocal(expr, expr.name)
+
+    def visitClassStmt(self, stmt: ClassStmt) -> None:
+        enclosing_class = self.current_class
+        self.current_class = "class"
+        self.declare(stmt.name)
+        self.define(stmt.name)
+        self.begin_scope()
+        self.scopes[-1]["this"] = True
+        for method in stmt.methods:
+            declaration = "method"
+            if method.name.lexeme == "init":
+                declaration = "initializer"
+            self.resolveFunction(method.function, declaration)
+        self.end_scope()
+        self.current_class = enclosing_class
 
     def visitFunction(self, stmt: Function) -> None:
         self.declare(stmt.name)
@@ -51,6 +67,8 @@ class Resolver(StmtVisitor, ExprVisitor):
         if self.current_function is None:
             self.error(stmt.keyword, "Can't return from top-level code")
         if stmt.value:
+            if self.current_function == "initializer":
+                self.error(stmt.keyword, "Can't return a value from an initializer")
             self._resolve(stmt.value)
 
     def visitWhile(self, stmt: While) -> None:
@@ -74,6 +92,19 @@ class Resolver(StmtVisitor, ExprVisitor):
         self._resolve(expr.callee)
         for arg in expr.arguments:
             self._resolve(arg)
+
+    def visitGet(self, expr: Get) -> None:
+        self._resolve(expr.obj)
+
+    def visitSet(self, expr: Set) -> None:
+        self._resolve(expr.value)
+        self._resolve(expr.obj)
+
+    def visitThis(self, expr: This) -> None:
+        if self.current_class is None:
+            self.error(expr.keyword, "Tried calling {this} outside of a class")
+            return
+        self.resolveLocal(expr, expr.keyword)
 
     def visitConditional(self, expr: Conditional) -> None:
         self._resolve(expr.condition)
@@ -111,18 +142,19 @@ class Resolver(StmtVisitor, ExprVisitor):
         for scope in reversed(self.scopes):
             if name.lexeme in scope.keys():
                 depth = len(self.scopes) - self.scopes.index(scope)
+                # print(name.lexeme, depth, len(self.scopes))
                 self.interpreter._resolve(expr, depth)
                 return
             
     def resolveFunction(self, function: FuncExpr, type: str) -> None:
         enclosing_function = self.current_function
         self.current_function = type
-        self.beginScope()
+        self.begin_scope()
         for param in function.params:
             self.declare(param)
             self.define(param)
         self.resolve(function.body)
-        self.endScope()
+        self.end_scope()
         self.current_function = enclosing_function
 
     def resolve(self, statements: List[Stmt]) -> None:
@@ -133,8 +165,8 @@ class Resolver(StmtVisitor, ExprVisitor):
     def _resolve(self, visited: Stmt | Expr) -> None:
         visited.accept(self)
 
-    def beginScope(self) -> None:
+    def begin_scope(self) -> None:
         self.scopes.append(dict())
 
-    def endScope(self) -> None:
+    def end_scope(self) -> None:
         self.scopes.pop()

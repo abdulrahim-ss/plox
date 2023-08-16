@@ -37,6 +37,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 self._exec(statement)
         except RunTimeError as err:
             self.error(err)
+        except NotImplementedError as err:
+            print("Not yet implemented")
 
     def visitEmpty(self, stmt: Empty) -> None:
         return
@@ -81,6 +83,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.Initializer is not None:
             value = self._eval(stmt.Initializer)
         self.env.assign(stmt.name, value)
+
+    def visitClassStmt(self, stmt: ClassStmt) -> None:
+        self.env.assign(stmt.name, None)
+        methods : Dict[str, ploxFunction] = dict()
+        for method in stmt.methods:
+            name = method.name.lexeme
+            func = ploxFunction(name, method.function, self.env, name == "init")
+            methods[name] = func
+        klass = ploxClass(stmt.name.lexeme, methods)
+        self.env.assign_existing(stmt.name, klass)
 
     def visitFunction(self, stmt: Function) -> None:
         name = stmt.name
@@ -138,7 +150,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         match expr.operator.type:
             case TT.MINUS:
-                self._checkNumber(expr.operator, right)
+                self._check_number(expr.operator, right)
                 return - right
             case TT.BANG:
                 return not self._isTruthy(right)
@@ -150,16 +162,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
         match expr.operator.type:
             # Arithmatic -------------------------------------------
             case TT.MINUS:
-                self._checkNumber(expr.operator, left, right)
+                self._check_number(expr.operator, left, right)
                 return left - right
             case TT.SLASH:
-                self._checkNumber(expr.operator, left, right)
+                self._check_number(expr.operator, left, right)
                 try:
                     return left / right
                 except ZeroDivisionError:
                     raise RunTimeError(expr.operator, "Tried dividing by zero")
             case TT.STAR:
-                self._checkNumber(expr.operator, left, right)
+                self._check_number(expr.operator, left, right)
                 return left * right
             case TT.PLUS:
                 if isinstance(left, str) or isinstance(right, str):
@@ -168,16 +180,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
                     return self._numify(left) + self._numify(right)
             # Comparison -------------------------------------------
             case TT.GREATER:
-                # self._checkNumber(expr.operator, left, right)
+                # self._check_number(expr.operator, left, right)
                 return self._numify(left) > self._numify(right)
             case TT.GREATER_EQUAL:
-                # self._checkNumber(expr.operator, left, right)
+                # self._check_number(expr.operator, left, right)
                 return self._numify(left) >= self._numify(right)
             case TT.LESS:
-                # self._checkNumber(expr.operator, left, right)
+                # self._check_number(expr.operator, left, right)
                 return self._numify(left) < self._numify(right)
             case TT.LESS_EQUAL:
-                # self._checkNumber(expr.operator, left, right)
+                # self._check_number(expr.operator, left, right)
                 return self._numify(left) <= self._numify(right)
             # Comaprison - equality --------------------------------
             case TT.EQUAL_EQUAL:
@@ -198,6 +210,25 @@ class Interpreter(ExprVisitor, StmtVisitor):
             raise RunTimeError(expr.paren,f"Expected {callee.arity()} arguments, but got {len(args)}")
 
         return callee.call(self, args)
+
+    def visitGet(self, expr: Get) -> object:
+        obj = self._eval(expr.obj)
+        if isinstance(obj, ploxInstance):
+            return obj.get(expr.name)
+
+        raise RunTimeError(expr.name, "Only instances have properties")
+
+    def visitSet(self, expr: Set) -> object:
+        obj = self._eval(expr.obj)
+        if not isinstance(obj, ploxInstance):
+            raise RunTimeError(expr.name, "Only instances have fields")
+
+        value = self._eval(expr.value)
+        obj.set(expr.name, value)
+        return value
+
+    def visitThis(self, expr: This) -> object:
+        return self.look_up_var(expr.keyword, expr)
 
     def visitConditional(self, expr: Conditional) -> object:
         if self._isTruthy(self._eval(expr.condition)):
@@ -239,7 +270,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return (a is None) ^ (b is None)
 
     @staticmethod
-    def _checkNumber(operator: Expr, *operands: object) -> None:
+    def _check_number(operator: Expr, *operands: object) -> None:
         if len(operands) == 1:
             if isinstance(operands[0], float): return
             else:

@@ -42,7 +42,7 @@ class Environment:
     def ancestor(self, distance: int) -> Environment:
         env = self
         for _ in range(distance - 1):
-            print(_, distance)
+            # print(_, distance)
             env = env.enclosing
-        print(env.values)
+        # print(env.values)
         return env

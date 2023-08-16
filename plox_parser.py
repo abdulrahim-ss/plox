@@ -25,14 +25,27 @@ class PloxParser:
             if self._match(TT.VAR):
                 return self.varDeclaration()
             if self._check(TT.FUN) and self._checkNext(TT.IDENTIFIER):
+                self._advance()
                 return self.function("function")
+            if self._match(TT.CLASS):
+                return self.class_declaration()
             return self.statement()
         except ParserError:
             self._sync()
             return None
 
+    def class_declaration(self) -> Stmt:
+        name : PloxToken = self._consume(TT.IDENTIFIER, "Expected a class name")
+        self._consume(TT.LEFT_BRACE, "Expected { \"{\" } before class body")
+
+        methods : List[Function] = []
+        while not self._check(TT.RIGHT_BRACE) and not self._isAtEnd():
+            methods.append(self.function("method"))
+        self._consume(TT.RIGHT_BRACE, "Expected { \"}\" } after class body")
+
+        return ClassStmt(name, methods)
+
     def function(self, kind: str) -> Stmt:
-        self._advance()
         name : PloxToken = self._consume(TT.IDENTIFIER, f"Expected a {kind} name")
         return Function(name, self.functionBody(kind))
 
@@ -48,7 +61,7 @@ class PloxParser:
         self._consume(TT.RIGHT_PAREN, "Expected {)} after parameters")
         self._consume(TT.LEFT_BRACE, "Expected { \"{\" } before %s body"%kind)
         body : List[Stmt] = self.block()
-        return FuncExpr(params, body)
+        return FuncExpr(params, body, kind)
 
     def varDeclaration(self) -> Stmt:
         name : PloxToken = self._consume(TT.IDENTIFIER, "Expected a variable name")
@@ -187,6 +200,9 @@ class PloxParser:
             if isinstance(expr, Variable):
                 name = expr.name
                 return Assign(name, value)
+            elif isinstance(expr, Get):
+                get = expr
+                return Set(get.obj, get.name, value)
             self._error(equals, "Invalid assignment target")
 
         return expr
@@ -276,6 +292,9 @@ class PloxParser:
         while True:
             if self._match(TT.LEFT_PAREN):
                 expr = self.finishCall(expr)
+            elif self._match(TT.DOT):
+                name = self._consume(TT.IDENTIFIER, "Expected property name after {.}")
+                expr = Get(expr, name)
             else: break
 
         return expr
@@ -297,6 +316,7 @@ class PloxParser:
         if self._match(TT.TRUE): return Literal(True)
         if self._match(TT.NIL): return Literal(None)
         if self._match(TT.FUN): return self.functionBody("function")
+        if self._match(TT.THIS): return This(self._previous())
 
         if self._match(TT.NUMBER, TT.STRING): return Literal(self._previous().literal)
 

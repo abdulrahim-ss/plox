@@ -71,6 +71,33 @@ class Call(Expr):
 		return visitor.visitCall(self)
 
 
+class Get(Expr):
+	def __init__(self, obj: Expr, name: PloxToken):
+		self.obj = obj
+		self.name = name
+
+	def accept(self, visitor):
+		return visitor.visitGet(self)
+
+
+class Set(Expr):
+	def __init__(self, obj: Expr, name: PloxToken, value: Expr):
+		self.obj = obj
+		self.name = name
+		self.value = value
+
+	def accept(self, visitor):
+		return visitor.visitSet(self)
+
+
+class This(Expr):
+	def __init__(self, keyword: PloxToken):
+		self.keyword = keyword
+
+	def accept(self, visitor):
+		return visitor.visitThis(self)
+
+
 class Conditional(Expr):
 	def __init__(self, condition: Expr, then_clause: Expr, else_clause: Expr):
 		self.condition = condition
@@ -90,9 +117,10 @@ class Variable(Expr):
 
 
 class FuncExpr(Expr):
-	def __init__(self, params: List[PloxToken], body: list):
+	def __init__(self, params: List[PloxToken], body: list, type: str):
 		self.params = params
 		self.body = body
+		self.type = type
 
 	def accept(self, visitor):
 		return visitor.visitFuncExpr(self)
@@ -118,6 +146,15 @@ class ExprVisitor:
 		raise NotImplementedError
 
 	def visitCall(self, expr: Call):
+		raise NotImplementedError
+
+	def visitGet(self, expr: Get):
+		raise NotImplementedError
+
+	def visitSet(self, expr: Set):
+		raise NotImplementedError
+
+	def visitThis(self, expr: This):
 		raise NotImplementedError
 
 	def visitConditional(self, expr: Conditional):

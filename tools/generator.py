@@ -82,6 +82,18 @@ if __name__ == "__main__":
             {"type": "PloxToken", "name": "paren"},
             {"type": "List[Expr]", "name": "arguments"},
         ],
+        "Get": [
+            {"type": "Expr", "name": "obj"},
+            {"type": "PloxToken", "name": "name"},
+        ],
+        "Set": [
+            {"type": "Expr", "name": "obj"},
+            {"type": "PloxToken", "name": "name"},
+            {"type": "Expr", "name": "value"},
+        ],
+        "This": [
+            {"type": "PloxToken", "name": "keyword"},
+        ],
         "Conditional": [
             {"type": "Expr", "name": "condition"},
             {"type": "Expr", "name": "then_clause"},
@@ -93,6 +105,7 @@ if __name__ == "__main__":
         "FuncExpr": [
             {"type": "List[PloxToken]", "name": "params"},
             {"type": "list", "name": "body"},
+            {"type": "str", "name": "type"},
         ],
     }
 
@@ -130,6 +143,10 @@ if __name__ == "__main__":
         "Break": [
         ],
         "Continue": [
+        ],
+        "ClassStmt": [
+            {"type": "PloxToken", "name": "name"},
+            {"type": "List[Function]", "name": "methods"},
         ],
         "Empty": [
         ],
