@@ -38,7 +38,7 @@ class PLox:
             self.runPrompt()
 
     def runFile(self, path: str) -> None:
-        if path.split('.')[-1].lower not in ["plox", "lox", "🐍"]:
+        if path.split('.')[-1].lower() not in ["plox", "lox", "🐍"]:
             print("Extension must be one of the following: \"plox\", \"lox\", or \"🐍\"")
             exit(999)
         with open(path, "r") as f:
