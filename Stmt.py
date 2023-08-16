@@ -96,8 +96,9 @@ class Continue(Stmt):
 
 
 class ClassStmt(Stmt):
-	def __init__(self, name: PloxToken, methods: List[Function]):
+	def __init__(self, name: PloxToken, parentclass: Expr, methods: List[Function]):
 		self.name = name
+		self.parentclass = parentclass
 		self.methods = methods
 
 	def accept(self, visitor):

@@ -37,6 +37,14 @@ class Resolver(StmtVisitor, ExprVisitor):
         self.current_class = "class"
         self.declare(stmt.name)
         self.define(stmt.name)
+        if stmt.parentclass:
+            self.current_class = "childclass"
+            if stmt.name.lexeme == stmt.parentclass.name.lexeme:
+                self.error(stmt.parentclass.name, "A class can't inherit from itself")
+                return
+            self._resolve(stmt.parentclass)
+            self.begin_scope()
+            self.scopes[-1]["parent"] = True
         self.begin_scope()
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
@@ -45,6 +53,7 @@ class Resolver(StmtVisitor, ExprVisitor):
                 declaration = "initializer"
             self.resolveFunction(method.function, declaration)
         self.end_scope()
+        if stmt.parentclass: self.end_scope()
         self.current_class = enclosing_class
 
     def visitFunction(self, stmt: Function) -> None:
@@ -104,6 +113,13 @@ class Resolver(StmtVisitor, ExprVisitor):
         if self.current_class is None:
             self.error(expr.keyword, "Tried calling {this} outside of a class")
             return
+        self.resolveLocal(expr, expr.keyword)
+
+    def visitParent(self, expr: Parent) -> None:
+        if not self.current_class:
+            self.error(expr.keyword, f"Can't use {{{expr.keyword.lexeme}}} outside of a class")
+        elif not self.current_class == "childclass":
+            self.error(expr.keyword, f"Can't use {{{expr.keyword.lexeme}}} with no parent class")
         self.resolveLocal(expr, expr.keyword)
 
     def visitConditional(self, expr: Conditional) -> None:

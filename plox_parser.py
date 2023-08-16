@@ -36,6 +36,10 @@ class PloxParser:
 
     def class_declaration(self) -> Stmt:
         name : PloxToken = self._consume(TT.IDENTIFIER, "Expected a class name")
+        parentclass : Variable = None
+        if self._match(TT.COLON, TT.LESS):
+            self._consume(TT.IDENTIFIER, "Expected a parent class name")
+            parentclass = Variable(self._previous())
         self._consume(TT.LEFT_BRACE, "Expected { \"{\" } before class body")
 
         methods : List[Function] = []
@@ -43,7 +47,7 @@ class PloxParser:
             methods.append(self.function("method"))
         self._consume(TT.RIGHT_BRACE, "Expected { \"}\" } after class body")
 
-        return ClassStmt(name, methods)
+        return ClassStmt(name, parentclass, methods)
 
     def function(self, kind: str) -> Stmt:
         name : PloxToken = self._consume(TT.IDENTIFIER, f"Expected a {kind} name")
@@ -317,8 +321,14 @@ class PloxParser:
         if self._match(TT.NIL): return Literal(None)
         if self._match(TT.FUN): return self.functionBody("function")
         if self._match(TT.THIS): return This(self._previous())
-
         if self._match(TT.NUMBER, TT.STRING): return Literal(self._previous().literal)
+
+        if self._match(TT.SUPER, TT.PARENT):
+            keyword = self._previous()
+            self._consume(TT.DOT, f"Expected {{.}} after {{{keyword.lexeme}}}")
+            method = self._consume(TT.IDENTIFIER, "Expected a parent class method name")
+            keyword.lexeme = "parent"
+            return Parent(keyword,  method)
 
         if self._match(TT.LEFT_PAREN):
             expr: Expr = self.expression()

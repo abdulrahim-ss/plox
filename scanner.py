@@ -19,6 +19,7 @@ class Scanner:
         'print':  TT.PRINT,
         'return': TT.RETURN,
         'super':  TT.SUPER,
+        'parent':  TT.PARENT,
         'this':   TT.THIS,
         'true':   TT.TRUE,
         'var':    TT.VAR,

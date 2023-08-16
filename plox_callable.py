@@ -41,19 +41,20 @@ class ploxFunction(ploxCallable):
     def arity(self) -> int:
         return len(self.declaration.params)
     
-    def bind(self, instance: ploxInstance, name: PloxToken, callback: callable) -> ploxFunction:
+    def bind(self, instance: ploxInstance, callback: callable | None = None) -> ploxFunction:
         env = Environment(RunTimeError, self.closure)
-        env.assign(PloxToken(TT.THIS, "this", None, name.line), instance)
+        env.assign(PloxToken(TT.THIS, "this", None, 0), instance)
         bound_method = ploxFunction(self.name, self.declaration, env, self.isInitializer)
-        bound_method.to_str = callback
+        if callback:
+            bound_method.to_str = callback
         return bound_method
     
     def to_str(self) -> str:
         if self.name:
             if self.declaration.type == "function":
-                return f"<fun {self.name}>"
+                return f"<fun [{self.name}]>"
             elif self.declaration.type == "method":
-                return f"<method {self.name}>"
+                return f"<method [{self.name}]>"
         else:
             return "<anonymous fun>"
 
@@ -65,22 +66,21 @@ class ploxFunction(ploxCallable):
 
 
 class ploxClass(ploxCallable):
-    def __init__(self, name: str, methods: Dict[str, ploxFunction]) -> None:
+    def __init__(self, name: str, parentclass: ploxClass, methods: Dict[str, ploxFunction]) -> None:
         self.name = name
+        self.parentclass = parentclass
         self.methods = methods
 
     def call(self, interpreter, arguments: list) -> object:
         instance = ploxInstance(self)
-        initializer = self.find_method("init")
+        initializer = self.find_method("init") # start here if you don't want parent to initalize
+                                               # with every child instance
         if initializer:
-            initializer.bind(instance,
-                             PloxToken(TT.IDENTIFIER, initializer.name, "init", 0),
-                             self.init_print
-                             ).call(interpreter, arguments)
+            initializer.bind(instance, self.init_print).call(interpreter, arguments)
         return instance
 
     def init_print(self):
-            return f"<initializer method of {self.name}>"
+            return f"<initializer method of [{self.name}]>"
 
     def arity(self) -> int:
         initializer = self.find_method("init")
@@ -92,15 +92,19 @@ class ploxClass(ploxCallable):
         method = self.methods.get(name)
         if method:
             method.to_str = self.method_print(method)
+        elif self.parentclass:
+            method = self.parentclass.find_method(name)
         return method
 
     def method_print(self, method: ploxFunction) -> callable:
         def wrapper():
-            return f"<method {method.name} member of {self.name}>"
+            return f"<method [{method.name}] member of [{self.name}]>"
         return wrapper
 
     def __str__(self) -> str:
-        return f"<class {self.name}>"
+        if self.parentclass:
+            return f"<class [{self.name}] child of [{self.parentclass.name}]>"
+        return f"<class [{self.name}]>"
     
     def __repr__(self) -> str:
         return self.__str__()
@@ -118,7 +122,7 @@ class ploxInstance:
         method = self.klass.find_method(name.lexeme)
         if method:
             callback = self.klass.init_print if name.lexeme =="init" else self.klass.method_print(method)
-            return method.bind(self, name, callback)
+            return method.bind(self, callback)
 
         raise RunTimeError(name, f"Undefined property {{{name.lexeme}}}")
 
@@ -126,7 +130,7 @@ class ploxInstance:
         self.fields[name.lexeme] = value
 
     def __str__(self) -> str:
-        return f"<{self.klass.name} instance>"
+        return f"<[{self.klass.name}] instance>"
     
     def __repr__(self) -> str:
         return self.__str__()

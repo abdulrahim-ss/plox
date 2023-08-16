@@ -85,13 +85,23 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.env.assign(stmt.name, value)
 
     def visitClassStmt(self, stmt: ClassStmt) -> None:
+        parentclass = None
+        if stmt.parentclass:
+            parentclass = self._eval(stmt.parentclass)
+            if not isinstance(parentclass, ploxClass):
+                raise RunTimeError(stmt.parentclass.name, "A parent class must be a class")
         self.env.assign(stmt.name, None)
+        if stmt.parentclass:
+            self.env = Environment(RunTimeError, self.env)
+            self.env.assign(PloxToken(TT.PARENT, "parent", None, stmt.name.line), parentclass)
         methods : Dict[str, ploxFunction] = dict()
         for method in stmt.methods:
             name = method.name.lexeme
             func = ploxFunction(name, method.function, self.env, name == "init")
             methods[name] = func
-        klass = ploxClass(stmt.name.lexeme, methods)
+        klass = ploxClass(stmt.name.lexeme, parentclass, methods)
+        if parentclass:
+            self.env = self.env.enclosing
         self.env.assign_existing(stmt.name, klass)
 
     def visitFunction(self, stmt: Function) -> None:
@@ -229,6 +239,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visitThis(self, expr: This) -> object:
         return self.look_up_var(expr.keyword, expr)
+
+    def visitParent(self, expr: Parent) -> object:
+        distance = self.locals.get(expr)
+        superclass : ploxClass = self.env.fetchAt(distance, expr.keyword)
+        obj : ploxInstance = self.env.fetchAt(distance - 1, PloxToken(TT.THIS, "this", None, expr.keyword.line))
+        method = superclass.find_method(expr.method.lexeme)
+        if method is None:
+            raise RunTimeError(expr.method, f"Undefined property {{{expr.method.lexeme}}}")
+        return method.bind(obj)
 
     def visitConditional(self, expr: Conditional) -> object:
         if self._isTruthy(self._eval(expr.condition)):

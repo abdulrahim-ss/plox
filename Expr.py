@@ -90,6 +90,15 @@ class Set(Expr):
 		return visitor.visitSet(self)
 
 
+class Parent(Expr):
+	def __init__(self, keyword: PloxToken, method: PloxToken):
+		self.keyword = keyword
+		self.method = method
+
+	def accept(self, visitor):
+		return visitor.visitParent(self)
+
+
 class This(Expr):
 	def __init__(self, keyword: PloxToken):
 		self.keyword = keyword
@@ -152,6 +161,9 @@ class ExprVisitor:
 		raise NotImplementedError
 
 	def visitSet(self, expr: Set):
+		raise NotImplementedError
+
+	def visitParent(self, expr: Parent):
 		raise NotImplementedError
 
 	def visitThis(self, expr: This):

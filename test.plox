@@ -1,11 +1,26 @@
-class Foo {
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream: Doughnut {
+  cook() {
+    parent.cook();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+
+BostonCream().cook();
+
+/* class Foo {
   init() {
     print 3;
   }
 }
 
 var foo = Foo();
-print foo.init;
+print foo.init; */
 
 /* class Thing {
   getCallback() {

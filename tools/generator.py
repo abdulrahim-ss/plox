@@ -91,6 +91,10 @@ if __name__ == "__main__":
             {"type": "PloxToken", "name": "name"},
             {"type": "Expr", "name": "value"},
         ],
+        "Parent": [
+            {"type": "PloxToken", "name": "keyword"},
+            {"type": "PloxToken", "name": "method"},
+        ],
         "This": [
             {"type": "PloxToken", "name": "keyword"},
         ],
@@ -146,6 +150,7 @@ if __name__ == "__main__":
         ],
         "ClassStmt": [
             {"type": "PloxToken", "name": "name"},
+            {"type": "Expr", "name": "parentclass"},
             {"type": "List[Function]", "name": "methods"},
         ],
         "Empty": [

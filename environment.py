@@ -4,7 +4,7 @@ from typing import Type
 from plox_token import PloxToken
 
 class Environment:
-    def __init__(self, raisable: Type[Exception], enclosing = None):
+    def __init__(self, raisable: Type[Exception], enclosing: Environment | None = None):
         self.raisable = raisable
         self.values = dict()
         self.enclosing: Environment = enclosing
