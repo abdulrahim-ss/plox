@@ -37,7 +37,10 @@ class PLox:
             self.interpreter = Interpreter(self.runtime_error, repl=self.repl)
             self.runPrompt()
 
-    def runFile(self, path) -> None:
+    def runFile(self, path: str) -> None:
+        if path.split('.')[-1].lower not in ["plox", "lox", "🐍"]:
+            print("Extension must be one of the following: \"plox\", \"lox\", or \"🐍\"")
+            exit(999)
         with open(path, "r") as f:
             lines = f.read()
             f.close()
