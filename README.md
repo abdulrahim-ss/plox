@@ -6,7 +6,7 @@ following his book<b> [Crafting Interpreters](https://craftinginterpreters.com/)
 ## Usage
 ** Requirements: <b>Python 3.10 or higher</b>
 - <b>_temporary installation method_</b>
-    [Download](https://github.com/abdulrahim-ss/plox/releases/tag/v1.0.0-alpha) the source code from github and extract the zip file 
+    Head to [Releases](https://github.com/abdulrahim-ss/plox/releases) and download the latest zip file and extract it to `<preferred path>/plox/`
 - For the interactive shell (REPL), in the main directory, run: `./plox.py`
 - To run a file, in the main directory, run: `./plox.py <path to your file with .plox, .lox, or .🐍 extension>`
 
@@ -14,7 +14,7 @@ following his book<b> [Crafting Interpreters](https://craftinginterpreters.com/)
 ## TODO
 * Fix a one-click-install package
 * Some clean-ups
-* Rest of challanges (~3 left)
+* Rest of challenges (~3 left)
 * More native functions (ex. imports)
 * Some more personal touches
 * Add vscode integration
