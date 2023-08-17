@@ -42,6 +42,14 @@ class Literal(Expr):
 		return visitor.visitLiteral(self)
 
 
+class ListExpr(Expr):
+	def __init__(self, values: List[Expr]):
+		self.values = values
+
+	def accept(self, visitor):
+		return visitor.visitListExpr(self)
+
+
 class Logical(Expr):
 	def __init__(self, left: Expr, operator: PloxToken, right: Expr):
 		self.left = left
@@ -59,6 +67,15 @@ class Unary(Expr):
 
 	def accept(self, visitor):
 		return visitor.visitUnary(self)
+
+
+class Subscriptable(Expr):
+	def __init__(self, subscribee: Expr, index: Expr):
+		self.subscribee = subscribee
+		self.index = index
+
+	def accept(self, visitor):
+		return visitor.visitSubscriptable(self)
 
 
 class Call(Expr):
@@ -148,10 +165,16 @@ class ExprVisitor:
 	def visitLiteral(self, expr: Literal):
 		raise NotImplementedError
 
+	def visitListExpr(self, expr: ListExpr):
+		raise NotImplementedError
+
 	def visitLogical(self, expr: Logical):
 		raise NotImplementedError
 
 	def visitUnary(self, expr: Unary):
+		raise NotImplementedError
+
+	def visitSubscriptable(self, expr: Subscriptable):
 		raise NotImplementedError
 
 	def visitCall(self, expr: Call):

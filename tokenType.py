@@ -3,7 +3,7 @@ from enum import Enum
 
 class TokenType(Enum):
     #Single-character tokens.
-    (LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
+    (LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, LEFT_BRACKET, RIGHT_BRACKET,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
     QUESTION, COLON,
 
@@ -20,4 +20,4 @@ class TokenType(Enum):
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
     PRINT, RETURN, SUPER, PARENT, THIS, TRUE, VAR, WHILE, BREAK, CONTINUE,
     
-    EOF) = range(44)
+    EOF) = range(46)

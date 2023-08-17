@@ -58,6 +58,8 @@ class Scanner:
             case ")": self.addToken(TT.RIGHT_PAREN)
             case "{": self.addToken(TT.LEFT_BRACE)
             case "}": self.addToken(TT.RIGHT_BRACE)
+            case "[": self.addToken(TT.LEFT_BRACKET)
+            case "]": self.addToken(TT.RIGHT_BRACKET)
             case ",": self.addToken(TT.COMMA)
             case ".": self.addToken(TT.DOT)
             case "-": self.addToken(TT.MINUS)

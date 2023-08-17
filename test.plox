@@ -4,13 +4,13 @@ class Doughnut {
   }
 }
 
-class BostonCream: Doughnut {
+class BostonCream : Doughnut {
   cook() {
     parent.cook();
     print "Pipe full of custard and coat with chocolate.";
   }
 }
-
+print 0 ? "is truthy" : "is falsy";
 BostonCream().cook();
 
 /* class Foo {

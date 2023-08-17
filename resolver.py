@@ -90,6 +90,10 @@ class Resolver(StmtVisitor, ExprVisitor):
     def visitContinue(self, stmt: Continue) -> None:
         return None
 
+    def visitListExpr(self, expr: ListExpr) -> None:
+        for expression in expr.values:
+            self._resolve(expression)
+
     def visitBinary(self, expr: Binary) -> None:
         self._resolve(expr.left)
         self._resolve(expr.right)
@@ -101,6 +105,11 @@ class Resolver(StmtVisitor, ExprVisitor):
         self._resolve(expr.callee)
         for arg in expr.arguments:
             self._resolve(arg)
+
+    def visitSubscriptable(self, expr: Subscriptable) -> None:
+        self._resolve(expr.subscribee)
+        self._resolve(expr.index)
+
 
     def visitGet(self, expr: Get) -> None:
         self._resolve(expr.obj)
@@ -128,7 +137,7 @@ class Resolver(StmtVisitor, ExprVisitor):
         self._resolve(expr.else_clause)
 
     def visitGrouping(self, expr: Grouping) -> None:
-        self._resolve(expr)
+        self._resolve(expr.expression)
 
     def visitLiteral(self, expr: Literal) -> None:
         return None

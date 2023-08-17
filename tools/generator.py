@@ -68,6 +68,9 @@ if __name__ == "__main__":
         "Literal": [
             {"type": "object", "name": "value"},
         ],
+        "ListExpr": [
+            {"type": "List[Expr]", "name": "values"},
+        ],
         "Logical": [
             {"type": "Expr", "name": "left"},
             {"type": "PloxToken", "name": "operator"},
@@ -76,6 +79,10 @@ if __name__ == "__main__":
         "Unary": [
             {"type": "PloxToken", "name": "operator"},
             {"type": "Expr", "name": "right"},
+        ],
+        "Subscriptable": [
+            {"type": "Expr", "name": "subscribee"},
+            {"type": "Expr", "name": "index"},
         ],
         "Call": [
             {"type": "Expr", "name": "callee"},

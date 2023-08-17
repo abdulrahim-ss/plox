@@ -299,6 +299,13 @@ class PloxParser:
             elif self._match(TT.DOT):
                 name = self._consume(TT.IDENTIFIER, "Expected property name after {.}")
                 expr = Get(expr, name)
+            elif self._match(TT.LEFT_BRACKET):
+                if not self._check(TT.RIGHT_BRACKET):
+                    index = self.expression()
+                else:
+                    raise self._error(self._previous(), "Expected index expression")
+                self._consume(TT.RIGHT_BRACKET, "Expected {]}")
+                return Subscriptable(expr, index)
             else: break
 
         return expr
@@ -328,13 +335,22 @@ class PloxParser:
             self._consume(TT.DOT, f"Expected {{.}} after {{{keyword.lexeme}}}")
             method = self._consume(TT.IDENTIFIER, "Expected a parent class method name")
             keyword.lexeme = "parent"
-            return Parent(keyword,  method)
+            return Parent(keyword, method)
 
         if self._match(TT.LEFT_PAREN):
             expr: Expr = self.expression()
             self._consume(TT.RIGHT_PAREN, "Expected {)} after expression")
             return Grouping(expr)
-        
+
+        if self._match(TT.LEFT_BRACKET):
+            values = []
+            while not self._check(TT.RIGHT_BRACKET) and not self._isAtEnd():
+                values.append(self.conditional())
+                if not self._check(TT.RIGHT_BRACKET):
+                    self._consume(TT.COMMA, "Expected {,} after list item")
+            self._consume(TT.RIGHT_BRACKET, "Expected {]} after list")
+            return ListExpr(values)
+
         if self._match(TT.IDENTIFIER): return Variable(self._previous())
         
         # Error production

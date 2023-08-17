@@ -130,6 +130,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visitLiteral(self, expr: Literal) -> object:
         return expr.value
 
+    def visitListExpr(self, expr: ListExpr) -> object:
+        vals = []
+        for value in expr.values:
+            vals.append(self._eval(value))
+        return vals
+
     def visitVariable(self, expr: Variable) -> object:
         value = self.look_up_var(expr.name, expr)
         return value
@@ -221,6 +227,19 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         return callee.call(self, args)
 
+    def visitSubscriptable(self, expr: Subscriptable) -> object:
+        subscribee = self._eval(expr.subscribee)
+        if not isinstance(subscribee, list) and not isinstance(subscribee, str):
+            raise RunTimeError(expr.subscribee, "Only subscriptable objects currently available are lists and strings")
+        index = self._eval(expr.index)
+        try:
+            index = int(index)
+        except:
+            raise RunTimeError(expr.index, "Index must be a number. Other types of indexing not yet implemented")
+        if index > len(subscribee):
+            raise RunTimeError(expr.index, f"Index {{{index}}} is out of range")
+        return subscribee[index]
+
     def visitGet(self, expr: Get) -> object:
         obj = self._eval(expr.obj)
         if isinstance(obj, ploxInstance):
@@ -272,7 +291,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if str(value).endswith(".0"): return str(value).split(".")[0]
         if value is True: return "true"
         if value is False: return "false"
-        return bytes(str(value), "utf-8").decode("unicode_escape")
+        if isinstance(value, list):
+            lista = "["
+            for val in value:
+                lista += Interpreter._stringify(val) + ", "
+            lista = lista[:-2] + "]"
+            return lista
+        if isinstance(value, str):
+            string = bytes(str(value), "utf-8").decode("unicode_escape")
+            return f"\"{string}\""
+        return str(value)
 
     @staticmethod
     def _isTruthy(obj: object) -> bool:
