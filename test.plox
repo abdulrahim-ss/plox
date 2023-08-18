@@ -17,6 +17,7 @@ class test: dad{
   }
 }
 print struct(test(1));
+print "test\ntest";
 
 /* print "for loop";
 for (var x = 0; x < 10; x = x+1){

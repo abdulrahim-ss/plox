@@ -50,7 +50,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visitExpression(self, stmt: Expression) -> None:
         value = self._eval(stmt.expression)
         if self.repl and not self.print_flag:
-            print(self._stringify(value))
+            value = self._stringify(value)
+            print(value)
 
     def visitIf(self, stmt: If) -> None:
         if self._isTruthy(self._eval(stmt.condition)):
@@ -299,8 +300,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
             lista = lista[:-2] + "]"
             return lista
         if isinstance(value, str):
-            string = bytes(str(value), "utf-8").decode("unicode_escape")
-            return f"\"{string}\""
+            string = value.encode("utf-8").decode("unicode_escape")
+            string = string.encode('utf-16').decode('utf-16')
+            return string
         return str(value)
 
     @staticmethod

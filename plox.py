@@ -1,5 +1,6 @@
 #!/bin/python3
 import argparse
+from os import get_terminal_size
 from typing import List, Type
 from cmd import Cmd
 
@@ -50,40 +51,28 @@ class PLox:
 
     def runPrompt(self) -> None:
         prompt = PloxCmd(self)
-        prompt.cmdloop()
-        #     intro = """\
-        # =================================================================
-        #         § PLOX - The Python 🐍 implementation of LOX §
-        # =================================================================\
-        # """
-        #     print(intro)
-        #     while True:
-        #         try:
-        #             #line = input(f"[{os.getcwd()}] § ")
-        #             line = input("§ ")
-        #         except EOFError:
-        #             print("\nBye 👋")
-        #             break
-        #         if line == "exit":
-        #             print("Bye 👋")
-        #             break
-        #         self.run(line)
-        #         self.hadError = False
+        while True:
+            try:
+                prompt.cmdloop()
+            except KeyboardInterrupt:
+                prompt.prompt = "§ "
+                prompt.current_command = ""
+                print("\nEXCEPTION: Interrupted by user")
 
     def run(self, source: str) -> None:
-        scanner = Scanner(source, self.scanning_error)
-        tokens: List[PloxToken] = scanner.scanTokens()
-
-        parser = PloxParser(tokens, self.parsing_error)
-        statements: List[Stmt] = parser.parse()
-
-        if self.hadError: return
-        resolver = Resolver(self.interpreter, self.resolve_error)
-        resolver.resolve(statements)
-        if self.hadError: return
-
         try:
+            scanner = Scanner(source, self.scanning_error)
+            tokens: List[PloxToken] = scanner.scanTokens()
+
+            parser = PloxParser(tokens, self.parsing_error)
+            statements: List[Stmt] = parser.parse()
+
+            if self.hadError: return
+            resolver = Resolver(self.interpreter, self.resolve_error)
+            resolver.resolve(statements)
+            if self.hadError: return
             self.interpreter.interpret(statements)
+
         except KeyboardInterrupt:
             print("\nEXCEPTION: Interrupted by user")
         # print(AstPrinter().stringify(expression))
@@ -125,11 +114,12 @@ class PloxCmd(Cmd):
     current_command : str = ""
     count = 0
     def __init__(self, plox) -> None:
-        intro = """\
-=================================================================
-         § PLOX - The Python 🐍 implementation of LOX §
-=================================================================\
-"""
+        width = get_terminal_size()[0]
+        padding = int((width - 45) / 2)
+        padding = " " * padding
+        l = "\n" + ("=" * width) + "\n"
+        title = "§ PLOX - The Python 🐍 implementation of LOX §"
+        intro = l + padding + title + padding + l
         self.plox = plox
         print(intro)
         super().__init__()
