@@ -29,6 +29,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.globals.assign(PloxToken(TT.IDENTIFIER, "sleep", None, -9), Sleep())
         self.globals.assign(PloxToken(TT.IDENTIFIER, "struct", None, -9), Struct())
         self.globals.assign(PloxToken(TT.IDENTIFIER, "input", None, -9), Input())
+        self.globals.assign(PloxToken(TT.IDENTIFIER, "help", None, -9), Help())
 
     def interpret(self, statements: List[Stmt]) -> None:
         try:

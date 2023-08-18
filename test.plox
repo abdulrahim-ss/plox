@@ -1,4 +1,24 @@
-print "for loop";
+class grandpa{
+  grand_par_meth(a, b, c){
+    print a + b + c;
+  }
+}
+class dad: grandpa{
+  par_meth(a, b, c){
+    print a + b + c;
+  }
+}
+class test: dad{
+  init(init_arg){
+    print init_arg;
+  }
+  meth(a, b, c){
+    print a + b + c;
+  }
+}
+print struct(test(1));
+
+/* print "for loop";
 for (var x = 0; x < 10; x = x+1){
   if (x==5) continue;
   print x;
@@ -12,7 +32,7 @@ while (x < 10){
   }
   print x;
   x = x + 1;
-}
+} */
 
 /*class Doughnut {
   cook() {

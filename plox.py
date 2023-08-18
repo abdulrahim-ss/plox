@@ -134,6 +134,9 @@ class PloxCmd(Cmd):
         print(intro)
         super().__init__()
 
+    def do_help(self, line: str) -> None:
+        return self.default(f"help{line}")
+
     def do_exit(self, arg) -> None:
         """EXIT"""
         print("Bye 👋")
