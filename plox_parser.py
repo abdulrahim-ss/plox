@@ -114,7 +114,7 @@ class PloxParser:
         condition = self.expression()
         self._consume(TT.RIGHT_PAREN, "Expected {)} after if condition")
         body : Stmt = self.statement()
-        body = Block([body, Empty])
+        body = Block([body, Empty()])
         self.loop_count -= 1
         return While(condition, body)
 

@@ -185,7 +185,6 @@ class Resolver(StmtVisitor, ExprVisitor):
     def resolve(self, statements: List[Stmt]) -> None:
         for statement in statements:
             self._resolve(statement)
-        # print(self.scopes)
 
     def _resolve(self, visited: Stmt | Expr) -> None:
         visited.accept(self)

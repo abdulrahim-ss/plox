@@ -64,7 +64,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
             except BreakException:
                 break
             except ContinueException:
-                self._exec(stmt.body.statements[-1])
+                self._exec_block([stmt.body.statements[-1]], Environment(RunTimeError, self.env))
                 continue
 
     def visitBreak(self, stmt: Break) -> None:

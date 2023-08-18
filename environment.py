@@ -44,5 +44,5 @@ class Environment:
         for _ in range(distance - 1):
             # print(_, distance)
             env = env.enclosing
-        # print(env.values)
+            # print(env.values)
         return env

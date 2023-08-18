@@ -1,4 +1,20 @@
-class Doughnut {
+print "for loop";
+for (var x = 0; x < 10; x = x+1){
+  if (x==5) continue;
+  print x;
+}
+print "while loop";
+var x = 0;
+while (x < 10){
+  if (x == 5){
+    x = x + 1;
+    continue;
+  }
+  print x;
+  x = x + 1;
+}
+
+/*class Doughnut {
   cook() {
     print "Fry until golden brown.";
   }
@@ -11,7 +27,7 @@ class BostonCream : Doughnut {
   }
 }
 print 0 ? "is truthy" : "is falsy";
-BostonCream().cook();
+BostonCream().cook();*/
 
 /* class Foo {
   init() {
