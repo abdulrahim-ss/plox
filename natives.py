@@ -49,23 +49,47 @@ class Struct(ploxCallable):
     
     def call(self, interpreter, args:list) -> str:
         callable = args[0]["value"]
-        if not isinstance(callable, ploxFunction):
-            return "not implemented"
-        try:
-            inp = args[0]["expr"].name.lexeme
-        except:
-            inp = "EXPRESSION"
-        return "\n".join(self._struct(inp, callable, interpreter))
+        if isinstance(callable, ploxFunction):
+            try:
+                inp = args[0]["expr"].name.lexeme
+            except:
+                inp = "EXPRESSION"
+            return "\n".join(self._struct_func(inp, callable, "function"))
+
+        elif isinstance(callable, ploxClass):
+            try:
+                inp = args[0]["expr"].name.lexeme
+            except:
+                inp = "EXPRESSION"
+            return "\n".join(self._struct_class(inp, callable))
+        else:
+            raise NotImplementedError
     
     def __repr__(self) -> str:
         return "<native fun>"
  
-    @staticmethod
-    def _struct(name, callable, interpreter):
+    def _struct_class(self, name, callable):
         yield "--------------------------"
         yield f"INPUT {{{name}}}:"
+        yield f"   Type: class"
+        yield f"   Name: {callable.name}"
+        if callable.parentclass:
+            yield f"   Parent: {callable.parentclass}"
+        for method in callable.methods:
+            print(method)
+            self._struct_func("Member method", method, "method")
+        yield "--------------------------"
+
+    @staticmethod
+    def _struct_func(name, callable, type):
+        if type == "function":
+            yield "--------------------------" 
+            yield f"INPUT {{{name}}}:"
+        else:
+            yield "  *********************  "
+            yield f"   {name}:"
         if callable.name:
-            yield "   Type: function"
+            yield f"   Type: {type}"
             yield f"   Name: {callable.name}"
         else:
             yield "   Type: anonymous function"
@@ -82,4 +106,5 @@ class Struct(ploxCallable):
         #         yield f"      - return[{i}]:   ({interpreter._eval(stmt.value)})"
         # if not explicit_return:
         #     yield "      returns nil"
-        yield "--------------------------"
+        finish_line = "--------------------------" if type == "function" else "  *********************  "
+        yield finish_line
