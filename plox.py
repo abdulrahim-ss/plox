@@ -1,6 +1,6 @@
 #!/bin/python3
 import argparse
-from os import get_terminal_size
+from os import get_terminal_size, path, getcwd
 from typing import List, Type
 from cmd import Cmd
 
@@ -38,11 +38,17 @@ class PLox:
             self.interpreter = Interpreter(self.runtime_error, repl=self.repl)
             self.runPrompt()
 
-    def runFile(self, path: str) -> None:
-        if path.split('.')[-1].lower() not in ["plox", "lox", "🐍"]:
+    def runFile(self, file_path: str) -> None:
+        if file_path.split('.')[-1].lower() not in ["plox", "lox", "🐍"]:
             print("Extension must be one of the following: \"plox\", \"lox\", or \"🐍\"")
             exit(999)
-        with open(path, "r") as f:
+        f_path = file_path
+        if not path.isabs(file_path):
+            f_path = path.join(getcwd(), file_path)
+        if not path.exists(f_path):
+            print("File could not be found. Make sure that file exists!")
+            exit(999)
+        with open(f_path, "r") as f:
             lines = f.read()
             f.close()
         self.run(lines)
